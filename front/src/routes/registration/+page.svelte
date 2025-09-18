@@ -17,35 +17,66 @@
     };
 
     if (continueRegistration) {
-      data.username = formData.get("username")!;
-      await fetch("/api/register", {
+      const registerData = new FormData();
+      registerData.append("email", data.email);
+      registerData.append("password", data.password);
+      registerData.append("username", formData.get("username")!);
+
+      if (formData.get("avatar")!!.name) {
+        registerData.append("avatar", formData.get("avatar")! as File);
+      }
+      if (formData.get("banner")!!.name) {
+        registerData.append("banner", formData.get("banner")! as File);
+      }
+
+      const response = await fetch("/api/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: registerData,
       });
+
+      if (response.ok) {
+        window.location.href = "/login";
+      }
     } else {
-      const response = await fetch("/api/baseRegister", {
+      const response = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
       if (response.ok) {
         const json = await response.json();
-        userExist = json.exist;
-        continueRegistration = !json.exist;
+        setInterval(() => userExist, 3000);
+        userExist = json.exists;
+        continueRegistration = !json.exists;
 
-        (document.querySelector('input[name="username"]') as HTMLInputElement).focus();
+        (
+          document.querySelector('input[name="username"]') as HTMLInputElement
+        ).focus();
       }
     }
+  }
+
+  $effect(() => (userExist ? alert.show() : alert.hide()));
+
+  async function handleMedia(event: Event) {
+    const file = (event.target as HTMLInputElement).files![0];
+    const block = document.querySelector(
+      `.extra-block__${event.target?.name?.split("-")[0]}`
+    ) as HTMLDivElement;
+
+    const fileURL = URL.createObjectURL(file);
+
+    block!.style.backgroundImage = `url(${fileURL})`;
+    block!.style.backgroundColor = "transparent";
   }
 
   async function checkUsername() {}
 </script>
 
-<Alert bind:this={alert} type="success" message="TEST" isOpen={userExist}/>
+<Alert bind:this={alert} type="error" message="User already exist" />
 
 <form class="df" onsubmit={(e) => handleRegistration(e)}>
-  <div class="logo df">
+  <div class="avatar df">
     <svg
       xmlns="http://www.w3.org/2000/svg"
       width="131"
@@ -80,11 +111,25 @@
   </div>
   <div class="extra-block df" class:visible={continueRegistration}>
     <div class="extra-block__media df">
-      <label for="logo-upload" class="extra-block__logo"></label>
-      <input class="hidden" id="logo-upload" type="file" accept="image/*" />
+      <label for="avatar-upload" class="extra-block__avatar"></label>
+      <input
+        onchange={(e) => handleMedia(e)}
+        class="hidden"
+        id="avatar-upload"
+        type="file"
+        accept="image/*"
+        name="avatar"
+      />
 
       <label for="banner-upload" class="extra-block__banner"></label>
-      <input class="hidden" id="banner-upload" type="file" accept="image/*" />
+      <input
+        onchange={(e) => handleMedia(e)}
+        class="hidden"
+        id="banner-upload"
+        type="file"
+        accept="image/*"
+        name="banner"
+      />
     </div>
     <input
       class="input"
@@ -124,6 +169,11 @@
   onclick={() => (continueRegistration = !continueRegistration)}>test</button
 > -->
 
+<!-- <button
+  style="position: fixed; top: 0;"
+  onclick={() => (alert.show())}>test</button
+> -->
+
 <style lang="scss">
   :global(body) {
     display: flex;
@@ -141,7 +191,7 @@
     }
   }
 
-  .logo {
+  .avatar {
     gap: 10px;
     flex-direction: column;
     width: 100%;
@@ -181,12 +231,14 @@
       height: 100px;
     }
 
-    &__logo {
+    &__avatar {
       width: 100px;
       height: 100px;
       background-color: white;
+      background-size: 100px 100px;
       border-radius: 50%;
       flex-shrink: 0;
+      overflow: hidden;
     }
 
     &__banner {

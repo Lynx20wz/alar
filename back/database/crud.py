@@ -10,12 +10,15 @@ class DataBaseCrud:
         self.session_maker = session_maker
 
     async def create_tables(self):
+        print('creating tables')
         async with self.engine.begin() as conn:
             print(Base.metadata.tables)
             await conn.run_sync(Base.metadata.drop_all) #TODO remove after development
             await conn.run_sync(Base.metadata.create_all)
 
     async def add_user(self, user: UserModel):
+        with open('avatar.png', 'wb') as f:
+            f.write(user.avatar)
         async with self.session_maker() as session:
             session.add(user)
             await session.commit()
