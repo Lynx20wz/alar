@@ -1,0 +1,15 @@
+{
+    "$schema": "https://docs.tolgee.io/cli-schema.json",
+    "projectId": 22285,
+    "apiUrl": "https://app.tolgee.io",
+    "pull": {
+        "path": "./src/public/i18n"
+    },
+    "push": {
+        "filesTemplate": "./src/public/i18n/{languageTag}.json",
+        "language": [
+            "en",
+            "ru-RU"
+        ]
+    }
+}

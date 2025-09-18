@@ -1,4 +1,10 @@
+*.pyc
+*.py~
+*.db*
+*/.venv
+
 node_modules
+
 
 .idea/
 .vscode/
@@ -8,15 +14,16 @@ node_modules
 .vercel
 .netlify
 .wrangler
-/.svelte-kit
+*/.svelte-kit
 /build
+/back/.ruff_cache
 
 # OS
 .DS_Store
 Thumbs.db
 
 # Env
-.env
+front/.env
 
 # Vite
 vite.config.js.timestamp-*
