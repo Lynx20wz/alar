@@ -1,0 +1,26 @@
+[project]
+name = "alar"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "aiosqlite>=0.21.0",
+    "fastapi>=0.116.1",
+    "pydantic>=2.11.7",
+    "sqlalchemy>=2.0.43",
+    "uvicorn[standard]>=0.35.0",
+]
+
+[tool.ruff]
+line-length = 100
+indent-width = 4
+
+[tool.ruff.lint]
+select = ["D"]
+ignore = ["D101", "D102", "D103", "D104", "D105", "D107", "D100"]
+pydocstyle.convention = "google"
+
+[tool.ruff.format]
+indent-style = "space"
+quote-style = "single"
