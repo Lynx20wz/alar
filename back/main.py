@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Form, UploadFile
+from fastapi import FastAPI, Form
 from fastapi.middleware.cors import CORSMiddleware
 from asyncio import run
 from database import DataBaseCrud
@@ -19,24 +19,18 @@ async def check_user_exist(data: UserBaseData):
 
 
 @app.post('/login')
-async def login(data: UserBaseData):
+async def login(data: UserBaseData = Form()):
     return {'exists': await check_user_exist(data)}
 
 
 @app.post('/register')
-async def register(
-    email: str = Form(...),
-    password: str = Form(...),
-    username: str = Form(...),
-    avatar: Optional[UploadFile] = Form(None),
-    banner: Optional[UploadFile] = Form(None),
-):
+async def register(data: UserRegisterData = Form()):
     user = UserModel(
-        email=email,
-        password=password,
-        username=username,
-        avatar=await avatar.read() if avatar else None,
-        banner=await banner.read() if banner else None,
+        email=data.email,
+        password=data.password,
+        username=data.username,
+        avatar=data.avatar.read() if data.avatar else None,
+        banner=data.banner.read() if data.banner else None,
     )
     await db.add_user(user)
     return {'status': 'ok'}

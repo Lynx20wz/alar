@@ -1,9 +1,9 @@
 {
-  "btn-login": "Log in",
+  "btn-login": "log in",
   "btn-signUp": "sign up",
   "l-createAccount": "don’t have an account?",
   "l-login": "already have an account?",
-  "loginSlogan": "Log in and share the code <b>with us</b>",
+  "loginSlogan": "Log in and share the code with us",
   "ph-email": "email",
   "ph-password": "password",
   "ph-username": "username",

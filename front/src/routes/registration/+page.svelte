@@ -11,44 +11,42 @@
   async function handleRegistration(e: Event) {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
-    const data = {
-      email: formData.get("email")!,
-      password: formData.get("password")!,
-    };
+    const data = new FormData();
+    data.append("email", formData.get("email")!);
+    data.append("password", formData.get("password")!);
+
 
     if (continueRegistration) {
-      const registerData = new FormData();
-      registerData.append("email", data.email);
-      registerData.append("password", data.password);
-      registerData.append("username", formData.get("username")!);
+      data.append("username", formData.get("username")!);
 
-      if (formData.get("avatar")!!.name) {
-        registerData.append("avatar", formData.get("avatar")! as File);
+      if ((formData.get("avatar") as File).name) {
+        data.append("avatar", formData.get("avatar") as File);
       }
-      if (formData.get("banner")!!.name) {
-        registerData.append("banner", formData.get("banner")! as File);
+      if ((formData.get("banner") as File).name) {
+        data.append("banner", formData.get("banner") as File);
       }
 
       const response = await fetch("/api/register", {
         method: "POST",
-        body: registerData,
+        body: data,
       });
 
-      if (response.ok) {
+      if (response.ok) { 
         window.location.href = "/login";
       }
     } else {
       const response = await fetch("/api/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: data,
       });
       if (response.ok) {
         const json = await response.json();
-        setInterval(() => userExist, 3000);
-        userExist = json.exists;
-        continueRegistration = !json.exists;
-
+        if (json.exists) {
+          userExist = true;
+          setTimeout(() => (userExist = false), 3000);
+        } else {
+          continueRegistration = true;
+        }
         (
           document.querySelector('input[name="username"]') as HTMLInputElement
         ).focus();
@@ -210,7 +208,7 @@
     width: 100%;
     opacity: 0;
     height: 0;
-    margin: -10px;
+    margin: -8px;
     transform: scaleY(0);
     transition:
       opacity 300ms ease-out,
