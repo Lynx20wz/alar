@@ -16,7 +16,7 @@ Alar is a full-stack web application created as a pet project. It's an attempt t
 
 ## TODO
 
-- [ ] a normal authentication system
+- [x] a normal authentication system
 - [ ] user profiles
 - [ ] posts
 - [ ] comments

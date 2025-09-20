@@ -8,17 +8,21 @@
   async function handleLogin(e: Event) {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
-    const response = await fetch("http://127.0.0.1:8000/login", {
-      method: "POST",
-      body: formData,
-    });
-    if (response.ok) {
-      const json = await response.json();
-      if (json.exists) {
+    try {
+      const response = await fetch("api/login", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+      if (response.ok) {
+        const json = await response.json();
+        localStorage.setItem("auth_token", json.token);
         window.location.href = "/";
       } else {
-        alert.show();
+        alert.show("User not exists");
       }
+    } catch (error) {
+      alert.show("Server not responding");
     }
   }
 </script>
@@ -64,9 +68,9 @@
       <input
         class="input"
         type="text"
-        name="email"
-        autocomplete="email"
-        placeholder={$t("ph-email")}
+        name="username"
+        autocomplete="username"
+        placeholder={$t("ph-username")}
         required
       />
       <input
@@ -95,10 +99,6 @@
     flex-direction: column;
     width: 550px;
     gap: 16px;
-
-    & svg {
-      margin-bottom: 10px;
-    }
   }
 
   .avatar {

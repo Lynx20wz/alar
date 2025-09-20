@@ -12,12 +12,11 @@
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
     const data = new FormData();
-    data.append("email", formData.get("email")!);
+    data.append("username", formData.get("username")!);
     data.append("password", formData.get("password")!);
 
-
     if (continueRegistration) {
-      data.append("username", formData.get("username")!);
+      data.append("email", formData.get("email")!);
 
       if ((formData.get("avatar") as File).name) {
         data.append("avatar", formData.get("avatar") as File);
@@ -26,30 +25,36 @@
         data.append("banner", formData.get("banner") as File);
       }
 
-      const response = await fetch("/api/register", {
-        method: "POST",
-        body: data,
-      });
-
-      if (response.ok) { 
-        window.location.href = "/login";
+      try {
+        const response = await fetch("/api/register", {
+          method: "POST",
+          body: data,
+        });
+        if (response.ok) {
+          localStorage.setItem("auth_token", (await response.json()).token);
+          window.location.href = "/";
+        }
+      } catch (error) {
+        alert.show("Server not responding");
       }
     } else {
-      const response = await fetch("/api/login", {
-        method: "POST",
-        body: data,
-      });
-      if (response.ok) {
-        const json = await response.json();
-        if (json.exists) {
+      try {
+        const response = await fetch("/api/login", {
+          method: "POST",
+          body: data,
+        });
+        if (response.ok) {
           userExist = true;
           setTimeout(() => (userExist = false), 3000);
         } else {
           continueRegistration = true;
+          (
+            document.querySelector('input[name="username"]') as HTMLInputElement
+          ).focus();
         }
-        (
-          document.querySelector('input[name="username"]') as HTMLInputElement
-        ).focus();
+      } catch (error) {
+        console.log(error);
+        alert.show("Server not responding");
       }
     }
   }
@@ -66,6 +71,7 @@
 
     block!.style.backgroundImage = `url(${fileURL})`;
     block!.style.backgroundColor = "transparent";
+    block!.classList.remove("upload");
   }
 
   async function checkUsername() {}
@@ -109,7 +115,21 @@
   </div>
   <div class="extra-block df" class:visible={continueRegistration}>
     <div class="extra-block__media df">
-      <label for="avatar-upload" class="extra-block__avatar"></label>
+      <label for="avatar-upload" class="extra-block__avatar upload df">
+        <svg
+          style="opacity: 0;"
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="30"
+          viewBox="0 0 24 30"
+          fill="none"
+        >
+          <path
+            d="M0 30H24V26.4706H0V30ZM0 12.3529H6.85714V22.9412H17.1429V12.3529H24L12 0L0 12.3529Z"
+            fill="#666890"
+          />
+        </svg>
+      </label>
       <input
         onchange={(e) => handleMedia(e)}
         class="hidden"
@@ -119,7 +139,21 @@
         name="avatar"
       />
 
-      <label for="banner-upload" class="extra-block__banner"></label>
+      <label for="banner-upload" class="extra-block__banner upload df">
+        <svg
+          style="opacity: 0;"
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="30"
+          viewBox="0 0 24 30"
+          fill="none"
+        >
+          <path
+            d="M0 30H24V26.4706H0V30ZM0 12.3529H6.85714V22.9412H17.1429V12.3529H24L12 0L0 12.3529Z"
+            fill="#666890"
+          />
+        </svg>
+      </label>
       <input
         onchange={(e) => handleMedia(e)}
         class="hidden"
@@ -131,10 +165,10 @@
     </div>
     <input
       class="input"
-      type="text"
-      name="username"
-      autocomplete="username"
-      placeholder={$t("ph-username")}
+      type="email"
+      name="email"
+      autocomplete="email"
+      placeholder={$t("ph-email")}
       required={continueRegistration}
     />
   </div>
@@ -142,10 +176,10 @@
     <div class="inputs df">
       <input
         class="input"
-        type="email"
-        name="email"
-        autocomplete="email"
-        placeholder={$t("ph-email")}
+        type="text"
+        name="username"
+        autocomplete="username"
+        placeholder={$t("ph-username")}
         required
       />
       <input
@@ -183,10 +217,6 @@
     flex-direction: column;
     width: 550px;
     gap: 16px;
-
-    & svg {
-      margin-bottom: 10px;
-    }
   }
 
   .avatar {
@@ -232,7 +262,7 @@
     &__avatar {
       width: 100px;
       height: 100px;
-      background-color: white;
+      background-color: var(--gray33);
       background-size: 100px 100px;
       border-radius: 50%;
       flex-shrink: 0;
@@ -242,7 +272,7 @@
     &__banner {
       width: 100%;
       height: 100%;
-      background-color: white;
+      background-color: var(--gray33);
     }
   }
 
@@ -271,5 +301,21 @@
     gap: 10px;
     align-self: stretch;
     border-radius: 10px;
+  }
+
+  .upload {
+    transition: filter 200ms;
+
+    & svg {
+      opacity: 0;
+      transition: opacity 200ms;
+    }
+
+    &:hover {
+      & svg {
+        opacity: 1 !important;
+      }
+      filter: brightness(0.8);
+    }
   }
 </style>

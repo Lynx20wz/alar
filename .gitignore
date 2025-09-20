@@ -1,6 +1,7 @@
 *.pyc
 *.py~
 *.db*
+*/.env
 */.venv
 
 node_modules
@@ -21,9 +22,6 @@ node_modules
 # OS
 .DS_Store
 Thumbs.db
-
-# Env
-front/.env
 
 # Vite
 vite.config.js.timestamp-*
