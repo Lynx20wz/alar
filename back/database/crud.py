@@ -1,7 +1,9 @@
 from sqlalchemy import select
+from passlib.hash import bcrypt
 
 from .models import *
 from .core import *
+from exceptions import NotCorrectPassword
 
 
 class DataBaseCrud:
@@ -24,15 +26,20 @@ class DataBaseCrud:
 
     async def add_user(self, user: UserModel) -> int:
         async with self.session_maker() as session:
+            user.password = bcrypt.hash(user.password)
             session.add(user)
             await session.commit()
             await session.refresh(user)
             return user.id
 
-    async def get_user(self, user: UserModel):
+    async def get_user(self, user: UserModel, check_password: bool = False) -> UserModel | None:
         async with self.session_maker() as session:
-            user = await session.scalar(select(UserModel).filter_by(username=user.username))
-            return user
+            userDB = await session.scalar(select(UserModel).filter_by(username=user.username))
+            if not userDB:
+                return None
+            elif check_password and not bcrypt.verify(user.password, userDB.password):
+                raise NotCorrectPassword()
+            return userDB
 
     async def get_user_by_id(self, userid: int) -> UserModel | None:
         async with self.session_maker() as session:

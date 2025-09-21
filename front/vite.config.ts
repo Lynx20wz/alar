@@ -5,6 +5,7 @@ import devtoolsJson from 'vite-plugin-devtools-json';
 export default defineConfig({
   plugins: [sveltekit(), devtoolsJson()],
   server: {
+    allowedHosts: true,
     port: 5050,
     proxy: {
       "/api": {

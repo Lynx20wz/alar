@@ -4,5 +4,7 @@
   const { t } = getTranslate();
 </script>
 
+
+
 <style lang="scss">
 </style>

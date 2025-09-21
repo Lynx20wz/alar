@@ -11,11 +11,30 @@
   async function handleRegistration(e: Event) {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
-    const data = new FormData();
-    data.append("username", formData.get("username")!);
-    data.append("password", formData.get("password")!);
 
-    if (continueRegistration) {
+    if (!continueRegistration) {
+      const response = await fetch(
+        `/api/exists?username=${formData.get("username")}`,
+        { method: "GET" }
+      );
+
+      if (response.ok) {
+        const json = await response.json();
+        if (json.exists) {
+          userExist = true;
+          setTimeout(() => (userExist = false), 3000);
+        } else {
+          continueRegistration = true;
+          (
+            document.querySelector('input[name="username"]') as HTMLInputElement
+          ).focus();
+        }
+      } else alert.show("User already exists");
+    } else {
+      const data = new FormData();
+
+      data.append("username", formData.get("username")!);
+      data.append("password", formData.get("password")!);
       data.append("email", formData.get("email")!);
 
       if ((formData.get("avatar") as File).name) {
@@ -25,37 +44,17 @@
         data.append("banner", formData.get("banner") as File);
       }
 
-      try {
-        const response = await fetch("/api/register", {
-          method: "POST",
-          body: data,
-        });
-        if (response.ok) {
-          localStorage.setItem("auth_token", (await response.json()).token);
-          window.location.href = "/";
-        }
-      } catch (error) {
-        alert.show("Server not responding");
-      }
-    } else {
-      try {
-        const response = await fetch("/api/login", {
-          method: "POST",
-          body: data,
-        });
-        if (response.ok) {
-          userExist = true;
-          setTimeout(() => (userExist = false), 3000);
-        } else {
-          continueRegistration = true;
-          (
-            document.querySelector('input[name="username"]') as HTMLInputElement
-          ).focus();
-        }
-      } catch (error) {
-        console.log(error);
-        alert.show("Server not responding");
-      }
+      const response = await fetch("/api/user", {
+        method: "POST",
+        body: data,
+      });
+
+      if (response.ok) {
+        const json = await response.json();
+        localStorage.setItem("auth_token", json.token);
+        localStorage.setItem("username", json.username);
+        window.location.href = "/";
+      } 
     }
   }
 

@@ -7,11 +7,18 @@
     LanguageStorage,
   } from "@tolgee/svelte";
   import { FormatIcu } from "@tolgee/format-icu";
-  import { isAuthenticated } from "$lib/auth";
+  import isAuthenticated from "$lib/auth";
   import { onMount } from "svelte";
+  import Header from "$lib/components/Header.svelte";
+  import { publicRouter } from "$lib/config";
+
+  let isPublicRoute = false;
 
   onMount(async () => {
-    await isAuthenticated();
+    isPublicRoute = publicRouter.includes(window.location.pathname);
+    if (!isPublicRoute) {
+      await isAuthenticated();
+    }
   });
 
   const tolgee = Tolgee()
@@ -27,10 +34,17 @@
 </script>
 
 <TolgeeProvider {tolgee}>
-  <main class="page">
+  <main class="page df">
+    {#if !isPublicRoute}
+      <Header />
+    {/if}
     <slot />
   </main>
 </TolgeeProvider>
 
 <style lang="scss">
+  .page {
+    width: 100%;
+    flex-direction: column;
+  }
 </style>

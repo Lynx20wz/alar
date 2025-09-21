@@ -8,21 +8,19 @@
   async function handleLogin(e: Event) {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
-    try {
-      const response = await fetch("api/login", {
-        method: "POST",
-        body: formData,
-        credentials: "include",
-      });
-      if (response.ok) {
-        const json = await response.json();
-        localStorage.setItem("auth_token", json.token);
-        window.location.href = "/";
-      } else {
-        alert.show("User not exists");
-      }
-    } catch (error) {
-      alert.show("Server not responding");
+
+    const response = await fetch("api/login", {
+      method: "POST",
+      body: formData,
+    });
+
+    const json = await response.json();
+    if (response.ok) {
+      localStorage.setItem("auth_token", json.token);
+      localStorage.setItem("username", json.username);
+      window.location.href = "/";
+    } else {
+      alert.show(json.detail);
     }
   }
 </script>

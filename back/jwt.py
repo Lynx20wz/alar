@@ -53,11 +53,11 @@ class JWTBearer(HTTPBearer):
         credentials = await super(JWTBearer, self).__call__(request)
         if credentials:
             if not credentials.scheme == 'Bearer':
-                raise HTTPException(status_code=403, detail='Invalid authentication scheme.')
+                return {'detail': 'Invalid authentication scheme.'}
             jwt_data = jwt_generator.decode_jwt(credentials.credentials)
             if not jwt_data:
-                raise HTTPException(status_code=401, detail='Invalid token or expired token.')
+                return {'detail': 'Invalid token or expired token.'}
             if not await self.db.get_user_by_id(int(jwt_data['sub'])):
-                raise HTTPException(status_code=404, detail='User not found.')
+                return {'detail': 'User not found.'}
         else:
-            raise HTTPException(status_code=403, detail='Invalid authorization code.')
+            return {'detail': 'Invalid authorization code.'}
