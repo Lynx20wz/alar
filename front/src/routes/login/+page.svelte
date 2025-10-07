@@ -9,15 +9,13 @@
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
 
-    const response = await fetch("api/login", {
+    const response = await fetch("api/auth/login", {
       method: "POST",
       body: formData,
     });
 
     const json = await response.json();
-    if (response.ok) {
-      localStorage.setItem("auth_token", json.token);
-      localStorage.setItem("username", json.username);
+    if (json.success) {
       window.location.href = "/";
     } else {
       alert.show(json.detail);
@@ -78,6 +76,12 @@
 
 <style lang="scss">
   :global(body) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  :global(.page) {
     display: flex;
     align-items: center;
     justify-content: center;

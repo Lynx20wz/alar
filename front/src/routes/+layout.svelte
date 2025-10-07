@@ -1,5 +1,4 @@
 <script lang="ts">
-  import "./styles/global.scss";
   import {
     TolgeeProvider,
     Tolgee,
@@ -7,19 +6,10 @@
     LanguageStorage,
   } from "@tolgee/svelte";
   import { FormatIcu } from "@tolgee/format-icu";
-  import isAuthenticated from "$lib/auth";
-  import { onMount } from "svelte";
+  import { isPublicRoute } from "$lib/config";
+
+  import "./styles/global.scss";
   import Header from "$lib/components/Header.svelte";
-  import { publicRouter } from "$lib/config";
-
-  let isPublicRoute = false;
-
-  onMount(async () => {
-    isPublicRoute = publicRouter.includes(window.location.pathname);
-    if (!isPublicRoute) {
-      await isAuthenticated();
-    }
-  });
 
   const tolgee = Tolgee()
     .use(DevTools())
@@ -34,11 +24,16 @@
 </script>
 
 <TolgeeProvider {tolgee}>
-  <main class="page df">
-    {#if !isPublicRoute}
+  <main class="page">
+    {#if !isPublicRoute(window.location.pathname)}
       <Header />
     {/if}
-    <slot />
+    <div
+      class="content"
+      class:container={!isPublicRoute(window.location.pathname)}
+    >
+      <slot />
+    </div>
   </main>
 </TolgeeProvider>
 
@@ -46,5 +41,9 @@
   .page {
     width: 100%;
     flex-direction: column;
+  }
+
+  .container {
+    margin-top: 64px;
   }
 </style>

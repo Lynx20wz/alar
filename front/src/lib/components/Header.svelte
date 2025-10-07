@@ -1,18 +1,10 @@
 <script lang="ts">
   import { getTranslate } from "@tolgee/svelte";
-  import type { User } from "$lib/types/User";
-  import { getAvatarUrl, getUser } from "$lib/user";
-  import { onMount } from "svelte";
+  import { page } from "$app/stores";
+
+  const user = $page.data.user;
 
   const { t } = getTranslate();
-
-  let avatar: string | undefined;
-  let user: User | undefined;
-
-  onMount(async () => {
-    avatar = await getAvatarUrl();
-    user = await getUser();
-  });
 </script>
 
 <header class="header df">
@@ -92,17 +84,18 @@
       placeholder={$t("ph-search")}
     />
   </div>
-  <a
-    href={`/${user?.username}`}
-    aria-label="profile"
-    class="header__profile"
-  >
-    <img class="header__avatar" src={avatar || ""} alt="avatar" />
+  <a href={user?.username} aria-label="profile" class="header__profile">
+    <img
+      class="header__avatar"
+      src={`/api/user/avatar/${user?.username}`}
+      alt="avatar"
+    />
   </a>
 </header>
 
 <style lang="scss">
   .header {
+    z-index: 1000;
     position: fixed;
     top: 0;
     align-items: center;
@@ -138,14 +131,12 @@
         }
       }
 
-
       &:focus-within {
         outline: 1px solid var(--secondary);
       }
 
       & input {
         width: 100%;
-        // height: 100%;
         background-color: transparent;
         border: none;
         color: var(--secondary);
@@ -153,6 +144,7 @@
         position: relative;
         &::placeholder {
           color: var(--secondary);
+          font-family: "Inter", sans-serif;
         }
         &:focus {
           outline: none;

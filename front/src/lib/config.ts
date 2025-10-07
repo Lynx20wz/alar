@@ -1,1 +1,5 @@
-export const publicRouter = ["/login", "/registration"];
+export const publicRouters = ["/login", "/registration"];
+
+export function isPublicRoute(path: string): boolean {
+  return publicRouters.includes(path);
+}

@@ -14,7 +14,7 @@
 
     if (!continueRegistration) {
       const response = await fetch(
-        `/api/exists?username=${formData.get("username")}`,
+        `/api/auth/exists?username=${formData.get("username")}`,
         { method: "GET" }
       );
 
@@ -44,17 +44,12 @@
         data.append("banner", formData.get("banner") as File);
       }
 
-      const response = await fetch("/api/user", {
+      const response = await fetch("/api/auth/user", {
         method: "POST",
         body: data,
       });
 
-      if (response.ok) {
-        const json = await response.json();
-        localStorage.setItem("auth_token", json.token);
-        localStorage.setItem("username", json.username);
-        window.location.href = "/";
-      } 
+      if (response.ok) window.location.href = "/";
     }
   }
 
@@ -197,6 +192,12 @@
 
 <style lang="scss">
   :global(body) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  :global(.page) {
     display: flex;
     align-items: center;
     justify-content: center;

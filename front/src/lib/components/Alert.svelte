@@ -104,6 +104,5 @@
 
   button {
     background-color: transparent;
-    border: none;
   }
 </style>
