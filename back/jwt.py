@@ -2,12 +2,14 @@ __all__ = ('jwt_generator', 'JWTBearer')
 
 import datetime
 
-from fastapi import HTTPException, Request
+from fastapi import HTTPException, Request, Depends
 from fastapi.security import HTTPBearer
 from jose import jwt as jose_jwt, JWTError
 from config import config
 
 from database import DataBaseCrud
+from deps import get_db_session
+
 
 class JWTGenerator:
     def _generate_jwt_token(
@@ -36,28 +38,36 @@ class JWTGenerator:
 
     def decode_jwt(self, token: str) -> dict:
         try:
-            decoded_token = jose_jwt.decode(token, config.JWT_SECRET, algorithms=[config.JWT_ALGORITHM])
-            return decoded_token if decoded_token["exp"] >= datetime.datetime.now(datetime.timezone.utc).timestamp() else None
-        except JWTError as e:
+            decoded_token = jose_jwt.decode(
+                token, config.JWT_SECRET, algorithms=[config.JWT_ALGORITHM]
+            )
+            return (
+                decoded_token
+                if decoded_token['exp'] >= datetime.datetime.now(datetime.timezone.utc).timestamp()
+                else None
+            )
+        except JWTError:
             return {}
 
 
 jwt_generator = JWTGenerator()
+
 
 class JWTBearer(HTTPBearer):
     def __init__(self, auto_error: bool = True):
         super(JWTBearer, self).__init__(auto_error=auto_error)
         self.db = DataBaseCrud()
 
-    async def __call__(self, request: Request):
+    async def __call__(self, request: Request, session = Depends(get_db_session)):
         credentials = await super(JWTBearer, self).__call__(request)
         if credentials:
             if not credentials.scheme == 'Bearer':
-                return {'detail': 'Invalid authentication scheme.'}
+                raise HTTPException(status_code=401, detail='Invalid authentication scheme.')
             jwt_data = jwt_generator.decode_jwt(credentials.credentials)
             if not jwt_data:
-                return {'detail': 'Invalid token or expired token.'}
-            if not await self.db.get_user_by_id(int(jwt_data['sub'])):
-                return {'detail': 'User not found.'}
+                raise HTTPException(status_code=401, detail='Invalid token or expired token.')
+            db_user = await self.db.get_user_by_id(session, int(jwt_data['sub']))
+            if not db_user or db_user.username != request.cookies.get('username'):
+                raise HTTPException(status_code=401, detail='User not found.')
         else:
-            return {'detail': 'Invalid authorization code.'}
+            raise HTTPException(status_code=401, detail='Invalid authorization code.')

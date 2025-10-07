@@ -7,10 +7,10 @@ from config import config
 
 engine = create_async_engine(
     url=f'sqlite+aiosqlite:///{config.DB_PATH}',
-    echo=True,
+    echo=False,
 )
 
-sm = async_sessionmaker(autocommit=False, autoflush=False, bind=engine)
+sm = async_sessionmaker(engine, expire_on_commit=False)
 
 
 class Base(DeclarativeBase):
