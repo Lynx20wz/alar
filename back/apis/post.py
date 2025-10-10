@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
-from back.deps import get_db_session
-from back.schemas import PostCreateInfo, PostInfo, UserInfo, BaseResponse
+from exceptions import PostNotFound
+from schemas import PostCreateInfo, PostInfo, UserInfo, BaseResponse
 from database import DataBaseCrud, PostModel
 from deps import get_current_user, get_db_session
 from jwt import JWTBearer

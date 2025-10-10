@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, File, UploadFile, Request
 from fastapi.responses import Response
 
-from back.database.core import Base
 from database import DataBaseCrud
 from exceptions import UserNotFound, ErrorResponse
 from database.models import UserModel
