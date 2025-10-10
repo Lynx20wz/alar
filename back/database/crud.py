@@ -1,11 +1,9 @@
-from sqlalchemy import select, exists
+from sqlalchemy import select, exists, update
 from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
-from passlib.hash import bcrypt
 
 from .models import *
 from .core import *
-from exceptions import NotCorrectPassword, UserNotFound
 
 
 class DataBaseCrud:
@@ -26,19 +24,17 @@ class DataBaseCrud:
 
     # user
     async def add_user(self, session: AsyncSession, user: UserModel) -> int:
-        user.password = bcrypt.hash(user.password)
         session.add(user)
         await session.commit()
         await session.refresh(user)
         return user.id
 
-    async def get_user(
-        self, session: AsyncSession, user: UserModel, check_password: bool = False
-    ) -> UserModel | None:
+    async def get_user(self, session: AsyncSession, user: UserModel) -> UserModel | None:
         userDB = await session.scalar(
             select(UserModel)
             .where(UserModel.username == user.username)
             .options(
+                joinedload(UserModel.stacks),
                 joinedload(UserModel.social_links),
                 selectinload(UserModel.posts).joinedload(PostModel.comments),
                 selectinload(UserModel.comments).joinedload(CommentModel.author),
@@ -48,10 +44,22 @@ class DataBaseCrud:
             )
         )
         if not userDB:
-            raise UserNotFound()
-        elif check_password and not bcrypt.verify(user.password, userDB.password):
-            raise NotCorrectPassword()
+            return None
         return userDB
+    
+    async def update_user(self, session: AsyncSession, user_id: int, **fields):
+        if not fields:
+            return
+
+        stmt = (
+            update(UserModel)
+            .where(UserModel.id == user_id)
+            .values(**fields)
+            .execution_options(synchronize_session="fetch")
+        )
+
+        await session.execute(stmt)
+        await session.commit()
 
     async def get_user_by_id(self, session: AsyncSession, userid: int) -> UserModel | None:
         return await session.get(UserModel, userid)
@@ -77,10 +85,11 @@ class DataBaseCrud:
             await session.scalars(
                 select(
                     PostModel,
-                    exists()
-                    .where(LikedPost.post_id == PostModel.id)
-                    .where(LikedPost.user_id == user_id)
-                    .label('is_liked'),
+                    exists(
+                        select(LikedPost)
+                        .where(LikedPost.post_id == PostModel.id)
+                        .where(LikedPost.user_id == user_id)
+                    ).label('is_liked'),
                 )
                 .order_by(PostModel.created_at.desc())
                 .options(
@@ -93,13 +102,7 @@ class DataBaseCrud:
 
     async def get_post(self, session: AsyncSession, post_id: int, user_id: int) -> PostModel | None:
         return await session.scalar(
-            select(
-                PostModel,
-                exists()
-                .where(LikedPost.post_id == PostModel.id)
-                .where(LikedPost.user_id == user_id)
-                .label('is_liked'),
-            )
+            select(PostModel)
             .where(PostModel.id == post_id)
             .options(
                 joinedload(PostModel.author),

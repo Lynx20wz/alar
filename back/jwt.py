@@ -54,20 +54,29 @@ jwt_generator = JWTGenerator()
 
 
 class JWTBearer(HTTPBearer):
-    def __init__(self, auto_error: bool = True):
+    def __init__(self, auto_error: bool = False):
         super(JWTBearer, self).__init__(auto_error=auto_error)
         self.db = DataBaseCrud()
 
-    async def __call__(self, request: Request, session = Depends(get_db_session)):
-        credentials = await super(JWTBearer, self).__call__(request)
-        if credentials:
-            if not credentials.scheme == 'Bearer':
-                raise HTTPException(status_code=401, detail='Invalid authentication scheme.')
-            jwt_data = jwt_generator.decode_jwt(credentials.credentials)
+    async def _get_token(self, request: Request) -> str:
+        if header_auth := request.headers.get('Authorization'):
+            return header_auth.split(' ')[1]
+        elif cookie_auth := request.cookies.get('token'):
+            return cookie_auth
+        return None
+
+    async def __call__(self, request: Request, session=Depends(get_db_session)):
+        await super(JWTBearer, self).__call__(request)
+        token = await self._get_token(request)
+        if token:
+            jwt_data = jwt_generator.decode_jwt(token)
             if not jwt_data:
                 raise HTTPException(status_code=401, detail='Invalid token or expired token.')
             db_user = await self.db.get_user_by_id(session, int(jwt_data['sub']))
-            if not db_user or db_user.username != request.cookies.get('username'):
+            username = request.cookies.get('username')
+            if not username:
+                raise HTTPException(status_code=404, detail='Not authorized.')
+            if not db_user or db_user.username != username:
                 raise HTTPException(status_code=401, detail='User not found.')
         else:
-            raise HTTPException(status_code=401, detail='Invalid authorization code.')
+            raise HTTPException(status_code=401, detail='Not authenticated.')

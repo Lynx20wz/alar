@@ -1,16 +1,28 @@
-from typing import Optional
+from typing import Optional, Union, List
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from fastapi import UploadFile
+from enum import Enum
 
 
-class LikesShortInfo(BaseModel):
+class LikesType(str, Enum):
+    users = 'users'
+    posts = 'posts'
+    comments = 'comments'
+
+
+class TotalInfo(BaseModel):
     total: int = 0
 
 
-class LikesInfo(LikesShortInfo):
-    users: list['UserShortInfo'] = Field(default_factory=list)
+class LikesInfo(TotalInfo):
+    type: LikesType = Field(default=LikesType.users)
+    objects: List[Union['UserShortInfo', 'PostShortInfo', 'CommentInfo']] = []
+
+    model_config = {
+        'from_attributes': True,
+    }
 
 
 class UserShortInfo(BaseModel):
@@ -23,11 +35,20 @@ class UserShortInfo(BaseModel):
 
 
 class UserInfo(UserShortInfo):
-    email: str
-    follows: list['UserShortInfo'] = Field(default_factory=list)
-    followers: list['UserShortInfo'] = Field(default_factory=list)
-    posts: list['PostShortInfo'] = Field(default_factory=list)
-    comments: list['CommentInfo'] = Field(default_factory=list)
+    email: EmailStr
+    bio: Optional[str]
+    follows: LikesInfo = Field(default_factory=LikesInfo)
+    followers: LikesInfo = Field(default_factory=LikesInfo)
+    posts: List['PostShortInfo'] = []
+    comments: List['CommentInfo'] = []
+    social_links: List['SocialLinkInfo'] = []
+    stacks: List['StackInfo'] = []
+
+
+class PostCreateInfo(BaseModel):
+    title: str = Field(..., min_length=1, max_length=100)
+    content: str
+    image: Optional[UploadFile] = None
 
 
 class PostShortInfo(BaseModel):
@@ -35,7 +56,8 @@ class PostShortInfo(BaseModel):
     author: UserShortInfo
     created_at: datetime
     title: str
-    likes: LikesShortInfo = Field(default_factory=LikesShortInfo)
+    is_liked: bool = False
+    likes: LikesInfo = Field(default_factory=LikesInfo)
 
     model_config = {
         'from_attributes': True,
@@ -44,10 +66,8 @@ class PostShortInfo(BaseModel):
 
 class PostInfo(PostShortInfo):
     content: str
-    is_liked: bool = False
-    likes: LikesInfo = Field(default_factory=LikesInfo)
     image: Optional[UploadFile] = None
-    comments: list['CommentInfo'] = Field(default_factory=list)
+    comments: List['CommentInfo'] = []
 
 
 class CommentInfo(BaseModel):
@@ -76,6 +96,18 @@ class SocialLinkInfo(BaseModel):
     }
 
 
+class StackInfo(BaseModel):
+    id: int
+    user_id: int
+    title: str
+    icon: Optional[bytes] = None
+    url: str
+
+    model_config = {
+        'from_attributes': True,
+    }
+
+
 # Requests
 class UserLoginData(BaseModel):
     username: str
@@ -83,7 +115,7 @@ class UserLoginData(BaseModel):
 
 
 class UserRegisterData(UserLoginData):
-    email: str
+    email: EmailStr
     avatar: Optional[UploadFile] = None
     banner: Optional[UploadFile] = None
 
@@ -91,15 +123,11 @@ class UserRegisterData(UserLoginData):
 # Responses
 class BaseResponse(BaseModel):
     success: bool = True
-    detail: str = 'Success'
-
-
-class UserTokenResponse(BaseResponse):
-    pass
+    detail: dict = {'msg': 'Success'}
 
 
 class UserResponse(BaseResponse):
-    user: UserInfo | None = None
+    user: UserInfo
     model_config = {'from_attributes': True}
 
 
