@@ -46,7 +46,7 @@ class DataBaseCrud:
         if not userDB:
             return None
         return userDB
-    
+
     async def update_user(self, session: AsyncSession, user_id: int, **fields):
         if not fields:
             return
@@ -55,7 +55,7 @@ class DataBaseCrud:
             update(UserModel)
             .where(UserModel.id == user_id)
             .values(**fields)
-            .execution_options(synchronize_session="fetch")
+            .execution_options(synchronize_session='fetch')
         )
 
         await session.execute(stmt)
@@ -100,7 +100,7 @@ class DataBaseCrud:
             )
         ).all()
 
-    async def get_post(self, session: AsyncSession, post_id: int, user_id: int) -> PostModel | None:
+    async def get_post(self, session: AsyncSession, post_id: int) -> PostModel | None:
         return await session.scalar(
             select(PostModel)
             .where(PostModel.id == post_id)
@@ -110,3 +110,18 @@ class DataBaseCrud:
                 selectinload(PostModel.likes_relations).joinedload(LikedPost.user),
             )
         )
+
+    # Comment
+    async def add_comment(self, session: AsyncSession, comment: CommentModel) -> int:
+        session.add(comment)
+        await session.commit()
+        await session.refresh(comment)
+        return comment.id
+
+    async def get_comments(self, session: AsyncSession) -> list[CommentModel]:
+        return (
+            await session.scalars(select(CommentModel).order_by(CommentModel.created_at.desc()))
+        ).all()
+
+    async def get_comment(self, session: AsyncSession, comment_id: int) -> CommentModel | None:
+        return await session.scalar(select(CommentModel).where(CommentModel.id == comment_id))

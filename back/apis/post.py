@@ -24,7 +24,7 @@ async def get_posts(
 async def get_post(
     post_id: int, session=Depends(get_db_session), user: UserInfo | None = Depends(get_current_user)
 ) -> PostInfo:
-    post = await db.get_post(session, post_id, user.id if user else 0)
+    post = await db.get_post(session, post_id)
     if not post:
         raise PostNotFound()
     post.is_liked = post.is_liked_by(user.id if user else 0)

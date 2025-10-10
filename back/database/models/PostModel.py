@@ -16,7 +16,7 @@ class PostModel(Base):
     title: Mapped[str] = mapped_column(unique=True)
     content: Mapped[str]
     image: Mapped[Optional[bytes]]
-    views: Mapped[int] = mapped_column(default=0)
+    views: Mapped[int] = mapped_column(server_default='0')
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     def is_liked_by(self, user_id: int) -> bool:
@@ -24,7 +24,6 @@ class PostModel(Base):
 
     author: Mapped['UserModel'] = relationship(back_populates='posts', lazy='joined')
     comments: Mapped[list['CommentModel']] = relationship(back_populates='post', lazy='joined')
-
     likes_relations: Mapped[list['LikedPost']] = relationship(back_populates='post', lazy='joined')
 
     @property
