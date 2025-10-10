@@ -3,7 +3,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from ..core import Base
 
 
-class SocialLink(Base):
+class SocialLinkModel(Base):
     __tablename__ = 'social_links'
     __table_args__ = (UniqueConstraint('user_id', 'platform', name='uq_user_platform'),)
 

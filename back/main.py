@@ -11,10 +11,12 @@ from apis import *
 
 db = DataBaseCrud()
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await db.create_tables()
     yield
+
 
 app = FastAPI(lifespan=lifespan)
 
