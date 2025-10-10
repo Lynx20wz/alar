@@ -1,10 +1,17 @@
-import type { User } from "./User";
+import type { UserShortInfo } from "./User";
+import type { CommentInfo } from "./Comment";
+import type { LikesInfo } from "./Likes";
 
-export interface Post {
+export interface PostShortInfo {
   id: number;
-  author: User;
-  created_at: string;
+  author: UserShortInfo;
+  created_at: Date;
   title: string;
+  is_liked: boolean;
+  likes: LikesInfo<UserShortInfo>;
+}
+export interface PostInfo extends PostShortInfo {
   content: string;
-  comments: Comment[];
+  image: Blob;
+  comments: CommentInfo[];
 }

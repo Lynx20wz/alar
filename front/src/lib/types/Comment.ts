@@ -1,10 +1,13 @@
-import type { Post } from "./Post";
-import type { User } from "./User";
+import type { UserShortInfo } from "./User";
+import type { PostShortInfo } from "./Post";
 
-export interface Comment {
+export interface CommentInfo {
   id: number;
-  author: User;
-  post: Post;
-  created_at: string;
+  author: UserShortInfo;
+  created_at: Date;
   content: string;
+}
+
+export interface CommentInfoWithPost extends CommentInfo {
+  post: PostShortInfo;
 }

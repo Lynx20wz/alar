@@ -32,7 +32,7 @@
       class="content"
       class:container={!isPublicRoute(window.location.pathname)}
     >
-      <slot />
+      <slot />  
     </div>
   </main>
 </TolgeeProvider>

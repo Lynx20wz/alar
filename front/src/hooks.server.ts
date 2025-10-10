@@ -1,16 +1,15 @@
 import { redirect } from "@sveltejs/kit";
 import { isPublicRoute } from "$lib/config";
-import type { User } from "$lib/types/User";
+import type { UserInfo } from "$lib/types/User";
 
 export const handle = async ({ event, resolve }) => {
   if (isPublicRoute(event.url.pathname)) {
     return resolve(event);
   }
-  
+
   const token = event.cookies.get("token");
   const username = event.cookies.get("username");
 
-  console.log(token, username);
   if (!username || !token) {
     throw redirect(302, "/login");
   }
@@ -18,21 +17,19 @@ export const handle = async ({ event, resolve }) => {
   let userDB;
 
   try {
-    const response = await fetch(`http://localhost:8000/user/${username}`, {
+    const response = await event.fetch(`http://localhost:8000/user/`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
-    const json = await response.json();
 
     if (!response.ok) {
-      throw new Error(
-        `HTTP error! status: ${response.status} | ${json.detail}`
-      );
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+    const json = await response.json();
 
     console.log(json);
-    userDB = json.user as User;
+    userDB = json.user as UserInfo;
   } catch (error) {
     console.log(error);
     console.error("Failed to fetch user:", error);
@@ -52,7 +49,7 @@ export const handle = async ({ event, resolve }) => {
 declare global {
   namespace App {
     interface Locals {
-      user: User;
+      user: UserInfo;
     }
   }
 }

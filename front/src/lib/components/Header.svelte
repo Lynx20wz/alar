@@ -1,8 +1,8 @@
 <script lang="ts">
   import { getTranslate } from "@tolgee/svelte";
-  import { page } from "$app/stores";
+  import { page } from "$app/state";
 
-  const user = $page.data.user;
+  const user = page.data.user;
 
   const { t } = getTranslate();
 </script>
