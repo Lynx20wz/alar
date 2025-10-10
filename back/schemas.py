@@ -56,6 +56,7 @@ class PostShortInfo(BaseModel):
     author: UserShortInfo
     created_at: datetime
     title: str
+    views: int
     is_liked: bool = False
     likes: LikesInfo = Field(default_factory=LikesInfo)
 

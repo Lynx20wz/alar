@@ -35,7 +35,8 @@
     gap: 15px;
     padding: 20px;
     flex-direction: row;
-    justify-content: space-between;
+    align-items: start;
+    justify-content: start;
   }
   .aside {
     height: 1000px;
@@ -61,8 +62,9 @@
   }
 
   .content {
-    width: auto;
+    width: 100%;
     &__items {
+      width: 100%;
       flex-direction: column;
       gap: 10px;
     }
