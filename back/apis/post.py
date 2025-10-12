@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, Response
 
 from database import DataBaseCrud, LikedPost, PostModel
-from deps import AsyncSession, get_current_user, get_db_session
+from deps import session_deps, user_deps
 from exceptions import PostNotFound
 from jwt import JWTBearer
-from schemas import BaseResponse, PostCreateInfo, PostInfo, UserInfo
+from schemas import BaseResponse, PostCreateInfo, PostInfo
 
 post_router = APIRouter(
     prefix='/posts',
@@ -13,30 +13,22 @@ post_router = APIRouter(
 db = DataBaseCrud()
 
 
-@post_router.get('/')
-async def get_posts(
-    session=Depends(get_db_session), user: UserInfo | None = Depends(get_current_user)
-) -> list[PostInfo]:
-    posts = await db.get_posts(session, user.id if user else 0)
-
-    return [PostInfo.model_validate(post) for post in posts]
+@post_router.get('/', response_model=list[PostInfo])
+async def get_posts(session: session_deps, user: user_deps) -> list[PostModel]:
+    return await db.get_posts(session, user.id if user else 0)
 
 
-@post_router.get('/{post_id}')
-async def get_post(
-    post_id: int,
-    session: AsyncSession = Depends(get_db_session),
-    user: UserInfo | None = Depends(get_current_user),
-) -> PostInfo:
+@post_router.get('/{post_id}', response_model=PostInfo)
+async def get_post(post_id: int, session: session_deps, user: user_deps) -> PostModel:
     post = await db.get_post(session, post_id)
     if not post:
         raise PostNotFound()
     post.is_liked = post.is_liked_by(user.id if user else 0)
-    return PostInfo.model_validate(post)
+    return post
 
 
 @post_router.get('/{post_id}/image')
-async def get_post_image(post_id: int, session: AsyncSession = Depends(get_db_session)):
+async def get_post_image(post_id: int, session: session_deps) -> Response:
     post = await db.get_post(session, post_id)
     if not post or not post.image:
         raise PostNotFound()
@@ -50,11 +42,7 @@ async def get_post_image(post_id: int, session: AsyncSession = Depends(get_db_se
 
 
 @post_router.post('/{post_id}/like', dependencies=[Depends(JWTBearer())])
-async def like_post(
-    post_id: int,
-    session: AsyncSession = Depends(get_db_session),
-    user: UserInfo = Depends(get_current_user),
-) -> BaseResponse:
+async def like_post(post_id: int, session: session_deps, user: user_deps) -> BaseResponse:
     post = await db.get_post(session, post_id)
     if not post:
         raise PostNotFound()
@@ -70,8 +58,8 @@ async def like_post(
 @post_router.post('/', status_code=201, dependencies=[Depends(JWTBearer())])
 async def add_post(
     post: PostCreateInfo,
-    session: AsyncSession = Depends(get_db_session),
-    user: UserInfo = Depends(get_current_user),
+    session: session_deps,
+    user: user_deps,
 ) -> BaseResponse:
     post_id = await db.add_post(session, PostModel(**post.model_dump(), author_id=user.id))
     return BaseResponse[int](data=post_id)

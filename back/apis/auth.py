@@ -1,9 +1,9 @@
 from back.schemas import UserExistsResponse
-from fastapi import APIRouter, Depends, Form, Response
+from fastapi import APIRouter, Form, Response
 
 from database import DataBaseCrud
 from database.models import UserModel
-from deps import get_db_session
+from deps import session_deps
 from jwt import jwt_generator
 from schemas import *
 
@@ -34,7 +34,7 @@ async def set_auth_cookies(response, user: UserModel):
 
 @auth_router.post('/login')
 async def login(
-    response: Response, session=Depends(get_db_session), data: UserLoginData = Form()
+    response: Response, session: session_deps, data: UserLoginData = Form()
 ) -> BaseResponse:
     userModel = UserModel(username=data.username, password=data.password)
     user = await db.get_user(session, userModel)
@@ -48,7 +48,7 @@ async def login(
 
 
 @auth_router.get('/exists', response_model=UserExistsResponse)
-async def check_user_exists(username: str, session=Depends(get_db_session)) -> UserExistsResponse:
+async def check_user_exists(username: str, session: session_deps) -> UserExistsResponse:
     userModel = UserModel(username=username)
     if not await db.get_user(session, userModel):
         return UserExistsResponse(exists=False, username=username)
@@ -57,7 +57,7 @@ async def check_user_exists(username: str, session=Depends(get_db_session)) -> U
 
 @auth_router.post('/user', status_code=201)
 async def register(
-    response: Response, session=Depends(get_db_session), data: UserRegisterData = Form()
+    response: Response, session: session_deps, data: UserRegisterData = Form()
 ) -> BaseResponse:
     user = UserModel(
         email=data.email,

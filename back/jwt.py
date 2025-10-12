@@ -3,14 +3,14 @@ __all__ = ('jwt_generator', 'JWTBearer')
 import datetime
 from typing import Optional
 
-from fastapi import Depends, HTTPException, Request
+from fastapi import HTTPException, Request
 from fastapi.security import HTTPBearer
 from jose import JWTError
 from jose import jwt as jose_jwt
 
 from config import config
 from database import DataBaseCrud
-from deps import get_db_session
+from deps import session_deps
 
 
 class JWTGenerator:
@@ -67,7 +67,7 @@ class JWTBearer(HTTPBearer):
             return cookie_auth
         return None
 
-    async def __call__(self, request: Request, session=Depends(get_db_session)):
+    async def __call__(self, request: Request, session: session_deps):  # pyright: ignore[reportIncompatibleMethodOverride]
         await super(JWTBearer, self).__call__(request)
         token = await self._get_token(request)
         if token:

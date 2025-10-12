@@ -1,12 +1,10 @@
-__all__ = ('get_db_session', 'get_current_user', 'AsyncSession')
+__all__ = ('get_db_session', 'get_current_user', 'session_deps', 'user_deps')
 
-from re import A
-from typing import AsyncGenerator
+from typing import Annotated, AsyncGenerator
 from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database import DataBaseCrud
-from database.models import UserModel
+from database import DataBaseCrud, UserModel
 from schemas import UserInfo
 
 db = DataBaseCrud()
@@ -28,3 +26,7 @@ async def get_current_user(
         yield None
     else:
         yield UserInfo.model_validate(user)
+
+
+session_deps = Annotated[AsyncSession, Depends(get_db_session)]
+user_deps = Annotated[UserInfo, Depends(get_current_user)]

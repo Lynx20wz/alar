@@ -20,13 +20,13 @@ class PostModel(Base):
     image: Mapped[Optional[bytes]]
     views: Mapped[int] = mapped_column(server_default='0')
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    
+
     _is_liked: bool = False
-    
+
     @property
     def is_liked(self) -> bool:
         return self._is_liked
-    
+
     @is_liked.setter
     def is_liked(self, value: bool):
         self._is_liked = value
@@ -46,7 +46,7 @@ class PostModel(Base):
             total=len(self.likes_relations),
             objects=[relation.user for relation in self.likes_relations],
         )
-        
+
     @property
     def hasImage(self) -> bool:
         return bool(self.image)
