@@ -19,7 +19,7 @@
 
     formData.append("file", file);
     const response = await fetch(
-      `/api/user/${elName}/${visited_user?.username}`,
+      `/api/users${elName}/${visited_user?.username}`,
       {
         method: "POST",
         body: formData,
@@ -27,19 +27,23 @@
     );
 
     if (response.ok && avatarEl && elName === "avatar") {
-      avatarEl.src = `/api/user/${elName}/${visited_user?.username}`;
+      avatarEl.src = `/api/users${elName}/${visited_user?.username}`;
     } else if (response.ok && bannerEl && elName === "banner") {
-      bannerEl.src = `/api/user/${elName}/${visited_user?.username}`;
+      bannerEl.src = `/api/users${elName}/${visited_user?.username}`;
     }
   }
 
   const { t } = getTranslate();
 </script>
 
+<svelte:head>
+  <title>{visited_user?.username}</title>
+</svelte:head>
+
 {#snippet media(element: string)}
   <img
     class="banner__{element}"
-    src="/api/user/{element}/{visited_user?.username}"
+    src="/api/users/{element}/{visited_user?.username}"
     alt={element}
   />
 {/snippet}
@@ -89,7 +93,7 @@
             >
               <path
                 d="M24.5455 10.2857C27.2618 10.2857 29.4382 7.98857 29.4382 5.14286C29.4382 2.29714 27.2618 0 24.5455 0C21.8291 0 19.6364 2.29714 19.6364 5.14286C19.6364 7.98857 21.8291 10.2857 24.5455 10.2857ZM11.4545 10.2857C14.1709 10.2857 16.3473 7.98857 16.3473 5.14286C16.3473 2.29714 14.1709 0 11.4545 0C8.73818 0 6.54545 2.29714 6.54545 5.14286C6.54545 7.98857 8.73818 10.2857 11.4545 10.2857ZM11.4545 13.7143C7.64182 13.7143 0 15.72 0 19.7143V22.2857C0 23.2286 0.736364 24 1.63636 24H21.2727C22.1727 24 22.9091 23.2286 22.9091 22.2857V19.7143C22.9091 15.72 15.2673 13.7143 11.4545 13.7143ZM24.5455 13.7143C24.0709 13.7143 23.5309 13.7486 22.9582 13.8C22.9909 13.8171 23.0073 13.8514 23.0236 13.8686C24.8891 15.2914 26.1818 17.1943 26.1818 19.7143V22.2857C26.1818 22.8857 26.0673 23.4686 25.8873 24H34.3636C35.2636 24 36 23.2286 36 22.2857V19.7143C36 15.72 28.3582 13.7143 24.5455 13.7143Z"
-                fill="#7072AE"
+                fill="var(--secondary)"
               />
             </svg></span
           >

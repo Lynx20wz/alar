@@ -20,6 +20,7 @@
     },
     "dependencies": {
         "@tolgee/format-icu": "^6.2.7",
-        "@tolgee/svelte": "^6.2.7"
+        "@tolgee/svelte": "^6.2.7",
+        "date-fns": "^4.1.0"
     }
 }

@@ -1,7 +1,7 @@
 import type { PageLoad } from "./$types";
 
 export const load: PageLoad = async ({ fetch }) => {
-  const response = await fetch("api/post/");
+  const response = await fetch("/api/posts/");
   if (!response.ok) {
     throw new Error("Failed to fetch posts");
   }

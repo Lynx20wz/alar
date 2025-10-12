@@ -1,5 +1,5 @@
 import { redirect } from "@sveltejs/kit";
-import { isPublicRoute } from "$lib/config";
+import { isPublicRoute } from "$lib/utils";
 import type { UserInfo } from "$lib/types/User";
 
 export const handle = async ({ event, resolve }) => {
@@ -17,7 +17,7 @@ export const handle = async ({ event, resolve }) => {
   let userDB;
 
   try {
-    const response = await event.fetch(`http://localhost:8000/user/`, {
+    const response = await event.fetch(`http://localhost:8000/users/`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

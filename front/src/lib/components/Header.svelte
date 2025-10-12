@@ -87,7 +87,7 @@
   <a href={user?.username} aria-label="profile" class="header__profile">
     <img
       class="header__avatar"
-      src={`/api/user/avatar/${user?.username}`}
+      src={`/api/users/avatar/${user?.username}`}
       alt="avatar"
     />
   </a>

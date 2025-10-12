@@ -6,7 +6,7 @@
     LanguageStorage,
   } from "@tolgee/svelte";
   import { FormatIcu } from "@tolgee/format-icu";
-  import { isPublicRoute } from "$lib/config";
+  import { isPublicRoute } from "$lib/utils";
 
   import "./styles/global.scss";
   import Header from "$lib/components/Header.svelte";
@@ -32,7 +32,7 @@
       class="content"
       class:container={!isPublicRoute(window.location.pathname)}
     >
-      <slot />  
+      <slot />
     </div>
   </main>
 </TolgeeProvider>

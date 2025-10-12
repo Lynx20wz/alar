@@ -6,7 +6,7 @@ export const load: PageLoad = async ({ fetch, params }) => {
 
   let visited_user: UserInfo | undefined = undefined;
   try {
-    const response = await fetch(`/api/user/${username}`);
+    const response = await fetch(`/api/users/${username}`);
     const json = await response.json();
     if (json.success) {
       visited_user = json.user as UserInfo;
@@ -16,5 +16,4 @@ export const load: PageLoad = async ({ fetch, params }) => {
   }
 
   return { visited_user };
-  
 };

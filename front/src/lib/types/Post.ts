@@ -9,10 +9,10 @@ export interface PostShortInfo {
   title: string;
   views: number;
   is_liked: boolean;
+  hasImage: boolean;
   likes: LikesInfo<UserShortInfo>;
 }
 export interface PostInfo extends PostShortInfo {
   content: string;
-  image: Blob;
   comments: CommentInfo[];
 }

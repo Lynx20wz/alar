@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { UserShortInfo } from "$lib/types/User";
-  
+
   export let user: UserShortInfo;
 
   export function setDefaultAvatar(event: Event) {
@@ -16,7 +16,7 @@
 <a href="/{user.username}" class="user-card df">
   <img
     class="user-card__avatar"
-    src={`/api/user/avatar/${user.username}`}
+    src={`/api/users/avatar/${user.username}`}
     alt="user avatar"
     onerror={setDefaultAvatar}
   />
@@ -27,6 +27,7 @@
   .user-card {
     gap: 5px;
     text-decoration: none;
+
     &__avatar {
       border-radius: 50%;
       height: 40px;
