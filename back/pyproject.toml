@@ -15,6 +15,7 @@ dependencies = [
     "sqlalchemy>=2.0.43",
     "uvicorn[standard]>=0.35.0",
     "loguru>=0.7.3",
+    "python-multipart>=0.0.20",
 ]
 
 [tool.ruff]

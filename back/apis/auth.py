@@ -1,4 +1,4 @@
-from back.schemas import UserExistsResponse
+from schemas import UserExistsResponse
 from fastapi import APIRouter, Form, Response
 
 from database import DataBaseCrud
