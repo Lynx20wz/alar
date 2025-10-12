@@ -1,3 +1,5 @@
+# pyright: reportUndefinedVariable=false
+
 from datetime import datetime
 from sqlalchemy import ForeignKey, DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship

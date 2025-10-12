@@ -1,13 +1,12 @@
+from asyncio import run
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-
 from fastapi.middleware.cors import CORSMiddleware
-from asyncio import run
-from database import DataBaseCrud
 
-from exceptions import setup_exception_handlers
 from apis import *
+from database import DataBaseCrud
+from exceptions import setup_exception_handlers
 
 db = DataBaseCrud()
 
@@ -36,5 +35,5 @@ setup_exception_handlers(app)
 if __name__ == '__main__':
     from uvicorn import Config, Server
 
-    server = Server(config=Config(app='main:app', host='127.0.0.1', port=8000, reload=True))
+    server = Server(config=Config(app='main:app', port=8000, reload=True, use_colors=True))
     run(server.serve())

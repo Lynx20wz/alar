@@ -1,9 +1,12 @@
-from typing import Optional, Union, List
 from datetime import datetime
-
-from pydantic import BaseModel, Field, EmailStr
-from fastapi import UploadFile
 from enum import Enum
+from turtle import st
+from typing import Generic, List, Optional, TypeVar, Union
+
+from fastapi import Response, UploadFile
+from pydantic import BaseModel, EmailStr, Field
+
+T = TypeVar('T')
 
 
 class LikesType(str, Enum):
@@ -58,6 +61,7 @@ class PostShortInfo(BaseModel):
     title: str
     views: int
     is_liked: bool = False
+    hasImage: bool = False
     likes: LikesInfo = Field(default_factory=LikesInfo)
 
     model_config = {
@@ -67,7 +71,6 @@ class PostShortInfo(BaseModel):
 
 class PostInfo(PostShortInfo):
     content: str
-    image: Optional[UploadFile] = None
     comments: List['CommentInfo'] = []
 
 
@@ -122,9 +125,10 @@ class UserRegisterData(UserLoginData):
 
 
 # Responses
-class BaseResponse(BaseModel):
+class BaseResponse(BaseModel, Generic[T]):
     success: bool = True
-    detail: dict = {'msg': 'Success'}
+    msg: str = 'Success'
+    data: Optional[T] = None
 
 
 class UserResponse(BaseResponse):
@@ -135,3 +139,12 @@ class UserResponse(BaseResponse):
 class UserExistsResponse(BaseModel):
     exists: bool
     username: str
+
+
+class FileResponse(Response):
+    def __init__(self, file: bytes, filename: str = 'img.png', cache_seconds: int = 3600):
+        headers = {
+            'Content-Disposition': f'attachment; filename="{filename}"',
+            'Cache-Control': f'public, max-age={cache_seconds}',
+        }
+        super().__init__(content=file, media_type='image/png', headers=headers)

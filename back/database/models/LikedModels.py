@@ -1,3 +1,5 @@
+# pyright: reportUndefinedVariable=false
+
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from ..core import Base

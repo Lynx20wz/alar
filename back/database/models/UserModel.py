@@ -1,11 +1,14 @@
+# pyright: reportUndefinedVariable=false
+
 from typing import Optional
 
+from passlib.hash import bcrypt
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
-from ..core import Base
-from passlib.hash import bcrypt
 
 from schemas import LikesInfo, LikesType
+
+from ..core import Base
 
 
 class UserModel(Base):
@@ -63,7 +66,7 @@ class UserModel(Base):
         )
 
     @property
-    def followers(self):
+    def followers(self) -> LikesInfo:
         return LikesInfo(
             type=LikesType.users,
             total=len(self.liked_by_users_relations),
@@ -71,7 +74,7 @@ class UserModel(Base):
         )
 
     @property
-    def liked_posts(self):
+    def liked_posts(self) -> LikesInfo:
         return LikesInfo(
             type=LikesType.posts,
             total=len(self.liked_posts_relations),

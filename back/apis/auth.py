@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Form, Depends, Response
+from back.schemas import UserExistsResponse
+from fastapi import APIRouter, Depends, Form, Response
+
 from database import DataBaseCrud
-from jwt import jwt_generator
-
 from database.models import UserModel
-from schemas import *
 from deps import get_db_session
-
+from jwt import jwt_generator
+from schemas import *
 
 auth_router = APIRouter(
     prefix='/auth',
@@ -39,22 +39,16 @@ async def login(
     userModel = UserModel(username=data.username, password=data.password)
     user = await db.get_user(session, userModel)
     if not user:
-        return BaseResponse(
-            success=False,
-            detail={'msg': 'User not found.'},
-        )
+        return BaseResponse(success=False, msg='User not found.')
 
     if not user.check_password(data.password):
-        return BaseResponse(
-            success=False,
-            detail={'msg': 'Not correct password.'},
-        )
+        return BaseResponse(success=False, msg='Not correct password.')
     await set_auth_cookies(response, user)
     return BaseResponse()
 
 
 @auth_router.get('/exists', response_model=UserExistsResponse)
-async def check_user_exists(username: str, session=Depends(get_db_session)):
+async def check_user_exists(username: str, session=Depends(get_db_session)) -> UserExistsResponse:
     userModel = UserModel(username=username)
     if not await db.get_user(session, userModel):
         return UserExistsResponse(exists=False, username=username)

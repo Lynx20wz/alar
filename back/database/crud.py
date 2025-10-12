@@ -1,9 +1,11 @@
-from sqlalchemy import select, exists, update
-from sqlalchemy.orm import joinedload, selectinload
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Sequence
 
-from .models import *
+from sqlalchemy import exists, select, update
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload, selectinload
+
 from .core import *
+from .models import *
 
 
 class DataBaseCrud:
@@ -70,19 +72,31 @@ class DataBaseCrud:
         await session.commit()
 
     async def remove_like(self, session: AsyncSession, like: LikedPost | LikedUser):
-        session.delete(like)
+        if isinstance(like, LikedPost):
+            likeDB = await session.scalar(
+                select(LikedPost).where(
+                    LikedPost.user_id == like.user_id, LikedPost.post_id == like.post_id
+                )
+            )
+        else:
+            likeDB = await session.scalar(
+                select(LikedUser).where(
+                    LikedUser.user_id == like.user_id, LikedUser.liked_user_id == like.liked_user_id
+                )
+            )
+        await session.delete(likeDB)
         await session.commit()
 
     # Post
-    async def add_post(self, session: AsyncSession, post: PostModel):
+    async def add_post(self, session: AsyncSession, post: PostModel) -> int:
         session.add(post)
         await session.commit()
         await session.refresh(post)
         return post.id
 
     async def get_posts(self, session: AsyncSession, user_id: int) -> list[PostModel]:
-        return (
-            await session.scalars(
+        result = (
+            await session.execute(
                 select(
                     PostModel,
                     exists(
@@ -99,6 +113,12 @@ class DataBaseCrud:
                 )
             )
         ).all()
+
+        posts = []
+        for post, is_liked in result:
+            post.is_liked = is_liked
+            posts.append(post)
+        return posts
 
     async def get_post(self, session: AsyncSession, post_id: int) -> PostModel | None:
         return await session.scalar(
@@ -121,7 +141,7 @@ class DataBaseCrud:
     async def get_comments(self, session: AsyncSession) -> list[CommentModel]:
         return (
             await session.scalars(select(CommentModel).order_by(CommentModel.created_at.desc()))
-        ).all()
+        ).all()  # type: ignore
 
     async def get_comment(self, session: AsyncSession, comment_id: int) -> CommentModel | None:
         return await session.scalar(select(CommentModel).where(CommentModel.id == comment_id))

@@ -1,21 +1,25 @@
-from fastapi import Request, Depends
+__all__ = ('get_db_session', 'get_current_user', 'AsyncSession')
+
+from re import A
+from typing import AsyncGenerator
+from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from database import DataBaseCrud
 from database.models import UserModel
 from schemas import UserInfo
-from database import DataBaseCrud
 
 db = DataBaseCrud()
 
 
-async def get_db_session() -> AsyncSession:
+async def get_db_session() -> AsyncGenerator[AsyncSession]:
     async with db.session_maker() as session:
         yield session
 
 
 async def get_current_user(
     request: Request, session: AsyncSession = Depends(get_db_session)
-) -> UserInfo | None:
+) -> AsyncGenerator[UserInfo | None]:
     username = request.cookies.get('username')
     if not username:
         yield None

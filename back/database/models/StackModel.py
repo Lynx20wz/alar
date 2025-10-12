@@ -1,3 +1,5 @@
+# pyright: reportUndefinedVariable=false
+
 from typing import Optional
 
 from sqlalchemy import ForeignKey, String

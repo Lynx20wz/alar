@@ -1,12 +1,14 @@
 __all__ = ('jwt_generator', 'JWTBearer')
 
 import datetime
+from typing import Optional
 
-from fastapi import HTTPException, Request, Depends
+from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPBearer
-from jose import jwt as jose_jwt, JWTError
-from config import config
+from jose import JWTError
+from jose import jwt as jose_jwt
 
+from config import config
 from database import DataBaseCrud
 from deps import get_db_session
 
@@ -16,7 +18,7 @@ class JWTGenerator:
         self,
         *,
         subject: str,
-        jwt_data: dict[str, str] = None,
+        jwt_data: Optional[dict[str, str]] = None,
         expires_delta: datetime.timedelta | None = None,
     ) -> str:
         if expires_delta:
@@ -36,7 +38,7 @@ class JWTGenerator:
             expires_delta=datetime.timedelta(minutes=config.JWT_ACCESS_TOKEN_EXPIRATION_TIME),
         )
 
-    def decode_jwt(self, token: str) -> dict:
+    def decode_jwt(self, token: str) -> dict | None:
         try:
             decoded_token = jose_jwt.decode(
                 token, config.JWT_SECRET, algorithms=[config.JWT_ALGORITHM]
@@ -58,7 +60,7 @@ class JWTBearer(HTTPBearer):
         super(JWTBearer, self).__init__(auto_error=auto_error)
         self.db = DataBaseCrud()
 
-    async def _get_token(self, request: Request) -> str:
+    async def _get_token(self, request: Request) -> str | None:
         if header_auth := request.headers.get('Authorization'):
             return header_auth.split(' ')[1]
         elif cookie_auth := request.cookies.get('token'):
