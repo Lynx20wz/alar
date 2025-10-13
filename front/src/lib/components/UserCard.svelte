@@ -16,7 +16,7 @@
 <a href="/{user.username}" class="user-card df">
   <img
     class="user-card__avatar"
-    src={`/api/users/avatar/${user.username}`}
+    src="/api/users/avatar/{user.username}"
     alt="user avatar"
     onerror={setDefaultAvatar}
   />
@@ -27,6 +27,8 @@
   .user-card {
     gap: 5px;
     text-decoration: none;
+    flex-grow: 1;
+    justify-content: flex-start;
 
     &__avatar {
       border-radius: 50%;

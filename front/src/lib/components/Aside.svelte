@@ -1,7 +1,7 @@
 <script lang="ts">
+  import { page } from "$app/state";
   import UserCard from "$lib/components/UserCard.svelte";
   import { getTranslate } from "@tolgee/svelte";
-  import { page } from "$app/state";
 
   const user = page.data.user;
   const { t } = getTranslate();
@@ -11,9 +11,9 @@
   <h5 class="aside__header">{$t("favorites")}</h5>
   <ul class="aside__items df">
     {#each user.follows.objects as follow}
-      <li class="aside__item df">
+      <div class="aside__item df">
         <UserCard user={follow} />
-      </li>
+      </div>
     {/each}
   </ul>
 </aside>

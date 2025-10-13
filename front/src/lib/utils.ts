@@ -11,10 +11,13 @@ export function isPublicRoute(path: string): boolean {
   return publicRouters.includes(path);
 }
 
-export function formatTimeAgo(date: Date, locale?: string): string {
+export function formatTimeAgo(date: Date, locale?: string, timezone: boolean = true): string {
+  if (timezone) {
+    date = new Date(date.getTime() - new Date().getTimezoneOffset() * 60 * 1000);
+  }
   return formatDistanceToNow(date, {
     addSuffix: true,
-    locale: locale ? locales[locale] : undefined,
+    locale: locale ? locales[locale] : enUS,
     includeSeconds: true,
   });
 }

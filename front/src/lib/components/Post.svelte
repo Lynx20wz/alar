@@ -1,8 +1,8 @@
 <script lang="ts">
   import type { PostInfo } from "$lib/types/Post";
   import { formatTimeAgo } from "$lib/utils";
+  import { getTolgee, getTranslate } from "@tolgee/svelte";
   import UserCard from "./UserCard.svelte";
-  import { getTranslate, getTolgee } from "@tolgee/svelte";
 
   const { t } = getTranslate();
   const Tolgee = getTolgee(["language"]);
