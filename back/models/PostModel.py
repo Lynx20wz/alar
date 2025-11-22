@@ -3,10 +3,10 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import ForeignKey, DateTime, func
+from sqlalchemy import DateTime, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from ..core import Base
 
+from db import Base
 from schemas import LikesInfo, LikesType
 
 
@@ -19,7 +19,7 @@ class PostModel(Base):
     content: Mapped[str]
     image: Mapped[Optional[bytes]]
     views: Mapped[int] = mapped_column(server_default='0')
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(), server_default=func.now())
 
     _is_liked: bool = False
 

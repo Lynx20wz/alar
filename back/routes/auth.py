@@ -1,17 +1,17 @@
-from schemas import UserExistsResponse
-from fastapi import APIRouter, Form, Response
+from typing import Annotated
 
-from database import DataBaseCrud
-from database.models import UserModel
-from deps import session_deps
+from fastapi import APIRouter, Depends, Form, Request, Response
+
+from deps import ServiceFactory
 from jwt import jwt_generator
+from models import UserModel
 from schemas import *
+from services import UserService
 
 auth_router = APIRouter(
     prefix='/auth',
     tags=['auth'],
 )
-db = DataBaseCrud()
 
 
 async def set_auth_cookies(response, user: UserModel):
@@ -34,10 +34,11 @@ async def set_auth_cookies(response, user: UserModel):
 
 @auth_router.post('/login')
 async def login(
-    response: Response, session: session_deps, data: UserLoginData = Form()
+    service: Annotated[UserService, Depends(ServiceFactory(UserService))],
+    response: Response,
+    data: UserLoginData = Form(),
 ) -> BaseResponse:
-    userModel = UserModel(username=data.username, password=data.password)
-    user = await db.get_user(session, userModel)
+    user = await service.repository.get_by(username=data.username, password=data.password)
     if not user:
         return BaseResponse(success=False, msg='User not found.')
 
@@ -48,16 +49,17 @@ async def login(
 
 
 @auth_router.get('/exists', response_model=UserExistsResponse)
-async def check_user_exists(username: str, session: session_deps) -> UserExistsResponse:
+async def check_user_exists(request: Request, username: str) -> UserExistsResponse:
     userModel = UserModel(username=username)
-    if not await db.get_user(session, userModel):
+    service = request.state.service
+    if not await service.get_user(userModel):
         return UserExistsResponse(exists=False, username=username)
     return UserExistsResponse(exists=True, username=username)
 
 
 @auth_router.post('/user', status_code=201)
 async def register(
-    response: Response, session: session_deps, data: UserRegisterData = Form()
+    request: Request, response: Response, data: UserRegisterData = Form()
 ) -> BaseResponse:
     user = UserModel(
         email=data.email,
@@ -66,6 +68,7 @@ async def register(
         avatar=await data.avatar.read() if data.avatar else None,
         banner=await data.banner.read() if data.banner else None,
     )
-    user_id = await db.add_user(session, user)
+    service = request.state.service
+    user_id = await service.add_user(user)
     await set_auth_cookies(response, UserModel(id=user_id, username=data.username))
     return BaseResponse()

@@ -9,8 +9,7 @@ from jose import JWTError
 from jose import jwt as jose_jwt
 
 from config import config
-from database import DataBaseCrud
-from deps import session_deps
+from services import UserService
 
 
 class JWTGenerator:
@@ -58,7 +57,6 @@ jwt_generator = JWTGenerator()
 class JWTBearer(HTTPBearer):
     def __init__(self, auto_error: bool = False):
         super(JWTBearer, self).__init__(auto_error=auto_error)
-        self.db = DataBaseCrud()
 
     async def _get_token(self, request: Request) -> str | None:
         if header_auth := request.headers.get('Authorization'):
@@ -67,14 +65,14 @@ class JWTBearer(HTTPBearer):
             return cookie_auth
         return None
 
-    async def __call__(self, request: Request, session: session_deps):  # pyright: ignore[reportIncompatibleMethodOverride]
+    async def __call__(self, request: Request):  # pyright: ignore[reportIncompatibleMethodOverride]
         await super(JWTBearer, self).__call__(request)
         token = await self._get_token(request)
         if token:
             jwt_data = jwt_generator.decode_jwt(token)
             if not jwt_data:
                 raise HTTPException(status_code=401, detail='Invalid token or expired token.')
-            db_user = await self.db.get_user_by_id(session, int(jwt_data['sub']))
+            db_user = await UserService().repository().get(int(jwt_data['sub']))
             username = request.cookies.get('username')
             if not username:
                 raise HTTPException(status_code=404, detail='Not authorized.')

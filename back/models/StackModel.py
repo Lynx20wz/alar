@@ -4,7 +4,8 @@ from typing import Optional
 
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from ..core import Base
+
+from db import Base
 
 
 class StackModel(Base):

@@ -1,9 +1,11 @@
 # pyright: reportUndefinedVariable=false
 
 from datetime import datetime
-from sqlalchemy import ForeignKey, DateTime, func
+
+from sqlalchemy import DateTime, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from ..core import Base
+
+from db import Base
 
 
 class CommentModel(Base):

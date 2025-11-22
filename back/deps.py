@@ -1,32 +1,34 @@
-__all__ = ('get_db_session', 'get_current_user', 'session_deps', 'user_deps')
+__all__ = ('get_current_user', 'user_deps', 'ServiceFactory')
 
 from typing import Annotated, AsyncGenerator
+
 from fastapi import Depends, Request
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from database import DataBaseCrud, UserModel
+from db import get_session
+from repository import UserRepository
 from schemas import UserInfo
-
-db = DataBaseCrud()
-
-
-async def get_db_session() -> AsyncGenerator[AsyncSession]:
-    async with db.session_maker() as session:
-        yield session
+from services import *
 
 
-async def get_current_user(
-    request: Request, session: AsyncSession = Depends(get_db_session)
-) -> AsyncGenerator[UserInfo | None]:
+class ServiceFactory:
+    def __init__(self, service_class: type[BaseService]):
+        self.service_class = service_class
+
+    async def __call__(self, request: Request) -> AsyncGenerator[BaseService, None]:
+        service = self.service_class(await get_session())
+        request.state.session = service
+        yield service
+
+
+async def get_current_user(request: Request) -> None:
     username = request.cookies.get('username')
     if not username:
-        yield None
-    user = await db.get_user(session, UserModel(username=username))
+        return
+    user = await UserRepository(session=request.state.session).get_by(username=username)
     if not user:
-        yield None
+        return
     else:
-        yield UserInfo.model_validate(user)
+        request.state.user = UserInfo.model_validate(user)
 
 
-session_deps = Annotated[AsyncSession, Depends(get_db_session)]
-user_deps = Annotated[UserInfo, Depends(get_current_user)]
+user_deps = Annotated[None, Depends(get_current_user)]

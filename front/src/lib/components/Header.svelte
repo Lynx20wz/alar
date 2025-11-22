@@ -1,10 +1,11 @@
 <script lang="ts">
-  import { getTranslate } from "@tolgee/svelte";
   import { page } from "$app/state";
+  import { getTranslate } from "@tolgee/svelte";
 
   const user = page.data.user;
 
   const { t } = getTranslate();
+  let showModal = $state(false);
 </script>
 
 <header class="header df">
@@ -84,7 +85,13 @@
       placeholder={$t("ph-search")}
     />
   </div>
-  <a href={user?.username} aria-label="profile" class="header__profile">
+  <a
+    href={user?.username}
+    aria-label="profile"
+    class="header__profile"
+    onmouseenter={() => (showModal = true)}
+    onmouseleave={() => (showModal = false)}
+  >
     <img
       class="header__avatar"
       src={`/api/users/avatar/${user?.username}`}
@@ -92,6 +99,10 @@
     />
   </a>
 </header>
+
+{#if showModal}
+  <div class="modal"><h1>hello</h1></div>
+{/if}
 
 <style lang="scss">
   .header {
@@ -154,6 +165,7 @@
 
     &__profile {
       background-color: transparent;
+      position: relative;
     }
 
     &__avatar {
@@ -161,5 +173,10 @@
       aspect-ratio: 1;
       border-radius: 50%;
     }
+  }
+  .modal {
+    position: absolute;
+    right: 0;
+    background-color: red;
   }
 </style>

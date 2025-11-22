@@ -6,15 +6,13 @@ from passlib.hash import bcrypt
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
+from db import Base
 from schemas import LikesInfo, LikesType
-
-from ..core import Base
 
 
 class UserModel(Base):
     __tablename__ = 'users'
 
-    id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str] = mapped_column(unique=True, index=True)
 
     # EXTRA

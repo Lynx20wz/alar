@@ -1,6 +1,5 @@
 from datetime import datetime
 from enum import Enum
-from turtle import st
 from typing import Generic, List, Optional, TypeVar, Union
 
 from fastapi import Response, UploadFile

@@ -3,7 +3,7 @@
   import Aside from "$lib/components/Aside.svelte";
   import UserCard from "$lib/components/UserCard.svelte";
   import { formatTimeAgo } from "$lib/utils";
-  import { getTranslate, getTolgee } from "@tolgee/svelte";
+  import { getTolgee, getTranslate } from "@tolgee/svelte";
 
   const { t } = getTranslate();
   const Tolgee = getTolgee(["language"]);
@@ -32,10 +32,10 @@
     <div class="post df">
       <div class="post__header df">
         <h4 class="post__title">{post.title}</h4>
-        <UserCard user={post.author} />
+        <UserCard user={post.author} reverse />
       </div>
       {#if post.hasImage}
-        <img src="/api/posts/{post.id}/image" alt="post" />
+        <img class="post__image" src="/api/posts/{post.id}/image" alt="post" />
       {/if}
       <h5 class="post__content">{post.content}</h5>
       <div class="stats df">
@@ -140,6 +140,9 @@
     &__header {
       align-self: stretch;
       justify-content: space-between;
+    }
+    &__image {
+      max-height: 600px;
     }
     &__content {
       color: var(--grayA1);

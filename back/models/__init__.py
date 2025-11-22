@@ -2,15 +2,16 @@ __all__ = (
     'UserModel',
     'PostModel',
     'CommentModel',
-    'LikedPost',
-    'LikedUser',
+    'LikePostModel',
+    'LikeUserModel',
+    'LikeModel',
     'SocialLinkModel',
     'StackModel',
 )
 
 from .CommentModel import CommentModel
+from .LikeModels import LikePostModel, LikeUserModel, LikeModel
 from .PostModel import PostModel
-from .UserModel import UserModel
-from .LikedModels import LikedPost, LikedUser
 from .SocialLinkModel import SocialLinkModel
 from .StackModel import StackModel
+from .UserModel import UserModel
