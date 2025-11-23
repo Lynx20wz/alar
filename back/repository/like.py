@@ -17,7 +17,7 @@ class LikeRepository(BaseRepository[LikeModel]):
             likeDB = await self.session.scalar(
                 select(LikeUserModel).where(
                     LikeUserModel.user_id == obj.user_id,
-                    LikeUserModel.liked_user_id == obj.liked_user_id,
+                    LikeUserModel.like_user_id == obj.like_user_id,
                 )
             )
         else:

@@ -7,12 +7,12 @@ from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from db import Base
-from schemas import LikesInfo, LikesType
 
 
 class UserModel(Base):
     __tablename__ = 'users'
-
+    
+    id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str] = mapped_column(unique=True, index=True)
 
     # EXTRA
@@ -30,15 +30,15 @@ class UserModel(Base):
     stacks: Mapped[list['StackModel']] = relationship(
         back_populates='user', cascade='all, delete-orphan'
     )
-    liked_users_relations: Mapped[list['LikedUser']] = relationship(
-        back_populates='user', foreign_keys='LikedUser.user_id'
-    )
-    liked_by_users_relations: Mapped[list['LikedUser']] = relationship(
-        back_populates='liked_user', foreign_keys='LikedUser.liked_user_id'
-    )
-    liked_posts_relations: Mapped[list['LikedPost']] = relationship(
-        back_populates='user', foreign_keys='LikedPost.user_id'
-    )
+    like_users_relations: Mapped[list['LikeUserModel']] = relationship(
+        back_populates='user', foreign_keys='LikeUserModel.user_id'
+    )  # who was liked by this user
+    like_by_users_relations: Mapped[list['LikeUserModel']] = relationship(
+        back_populates='like_user', foreign_keys='LikeUserModel.like_user_id'
+    )  # who liked this user
+    like_posts_relations: Mapped[list['LikePostModel']] = relationship(
+        back_populates='user', foreign_keys='LikePostModel.user_id'
+    )  # what posts were liked by this user
 
     @validates('username')
     def convert_lower(self, key, value):
@@ -54,27 +54,3 @@ class UserModel(Base):
 
     def check_password(self, plain_password: str) -> bool:
         return bcrypt.verify(plain_password, self._password)
-
-    @property
-    def follows(self):
-        return LikesInfo(
-            type=LikesType.users,
-            total=len(self.liked_users_relations),
-            objects=[relation.liked_user for relation in self.liked_users_relations],
-        )
-
-    @property
-    def followers(self) -> LikesInfo:
-        return LikesInfo(
-            type=LikesType.users,
-            total=len(self.liked_by_users_relations),
-            objects=[relation.user for relation in self.liked_by_users_relations],
-        )
-
-    @property
-    def liked_posts(self) -> LikesInfo:
-        return LikesInfo(
-            type=LikesType.posts,
-            total=len(self.liked_posts_relations),
-            objects=[relation.post for relation in self.liked_posts_relations],
-        )

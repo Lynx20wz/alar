@@ -26,7 +26,7 @@ class BaseRepository(ABC, Generic[ModelType]):
 
     async def get_by(self, **kwargs) -> Optional[ModelType]:
         filters = [getattr(self.model, key) == value for key, value in kwargs.items()]
-        
+
         if filters:
             return await self.session.scalar(select(self.model).where(*filters))
 
@@ -35,9 +35,10 @@ class BaseRepository(ABC, Generic[ModelType]):
 
         if filters:
             return await self.session.scalar(select(self.model).where(*filters))
-        
-    async def get_all(self) -> list[ModelType]:
-        return list(await self.session.scalars(select(self.model)))
+
+    async def get_all(self, offset: int) -> list[ModelType]:
+        result = await self.session.scalars(select(self.model).limit(10).offset(offset))
+        return list(result.unique())
 
     async def update(self, id: int, **fields: dict[str, Any]) -> None:
         stmt = (

@@ -1,7 +1,7 @@
 # pyright: reportUndefinedVariable=false
 
 from sqlalchemy import ForeignKey
-from sqlalchemy.orm import Mapped, declared_attr, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from db import Base
 
@@ -9,28 +9,35 @@ from db import Base
 class LikeModel(Base):
     __abstract__ = True
 
-    user_id: Mapped[int] = mapped_column(primary_key=True)
-
-    @declared_attr
-    def user(cls) -> Mapped['UserModel']:
-        return relationship(foreign_keys=[cls.user_id], back_populates='liked_users_relations')
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
 
 
 class LikeUserModel(LikeModel):
     __tablename__ = 'user_likes'
 
-    liked_user_id: Mapped[int] = mapped_column(ForeignKey('users.id'), primary_key=True)
+    like_user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
 
-    liked_user: Mapped['UserModel'] = relationship(
-        foreign_keys=[liked_user_id], back_populates='liked_by_users_relations'
+    user: Mapped['UserModel'] = relationship(
+        foreign_keys='LikeUserModel.user_id',
+        back_populates='like_users_relations',
+    )
+    like_user: Mapped['UserModel'] = relationship(
+        foreign_keys=like_user_id,
+        back_populates='like_by_users_relations',
     )
 
 
 class LikePostModel(LikeModel):
     __tablename__ = 'post_likes'
 
-    post_id: Mapped[int] = mapped_column(ForeignKey('posts.id'), primary_key=True)
+    post_id: Mapped[int] = mapped_column(ForeignKey('posts.id'))
 
+    user: Mapped['UserModel'] = relationship(
+        foreign_keys='LikePostModel.user_id',
+        back_populates='like_posts_relations',
+    )
     post: Mapped['PostModel'] = relationship(
-        back_populates='likes_relations', foreign_keys=[post_id], lazy='joined'
+        foreign_keys=post_id,
+        back_populates='likes_relations',
     )

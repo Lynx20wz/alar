@@ -1,7 +1,6 @@
 from typing import Optional
 
-from sqlalchemy import exists, select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from sqlalchemy.orm import joinedload, selectinload
 
 from models import LikePostModel, PostModel
@@ -10,6 +9,8 @@ from .base import BaseRepository
 
 
 class PostRepository(BaseRepository[PostModel]):
+    model = PostModel
+
     async def get(self, id: int) -> Optional[PostModel]:
         return await self.session.scalar(
             select(PostModel)
@@ -21,17 +22,11 @@ class PostRepository(BaseRepository[PostModel]):
             )
         )
 
-    async def get_all(self, session: AsyncSession, user_id: int) -> list[PostModel]:
-        result = (
-            await session.execute(
-                select(
-                    PostModel,
-                    exists(
-                        select(LikePostModel)
-                        .where(LikePostModel.post_id == PostModel.id)
-                        .where(LikePostModel.user_id == user_id)
-                    ).label('is_liked'),
-                )
+    async def get_all_for_user(self, user_id: int) -> list[PostModel]:
+        return list(
+            await self.session.scalars(
+                select(PostModel)
+                .where(PostModel.author_id == user_id)
                 .order_by(PostModel.created_at.desc())
                 .options(
                     joinedload(PostModel.author),
@@ -39,10 +34,4 @@ class PostRepository(BaseRepository[PostModel]):
                     selectinload(PostModel.likes_relations).joinedload(LikePostModel.user),
                 )
             )
-        ).all()
-
-        posts = []
-        for post, is_liked in result:
-            post.is_liked = is_liked
-            posts.append(post)
-        return posts
+        )

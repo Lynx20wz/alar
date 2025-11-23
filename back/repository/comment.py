@@ -4,4 +4,4 @@ from .base import BaseRepository
 
 
 class CommentRepository(BaseRepository[CommentModel]):
-    pass
+    model = CommentModel

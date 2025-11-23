@@ -18,7 +18,7 @@
     if (json.success) {
       window.location.href = "/";
     } else {
-      alert.show(json.detail.msg);
+      alert.show(json.msg);
     }
   }
 </script>

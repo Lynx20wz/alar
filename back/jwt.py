@@ -3,12 +3,13 @@ __all__ = ('jwt_generator', 'JWTBearer')
 import datetime
 from typing import Optional
 
-from fastapi import HTTPException, Request
+from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPBearer
 from jose import JWTError
 from jose import jwt as jose_jwt
 
 from config import config
+from deps import ServiceFactory
 from services import UserService
 
 
@@ -65,18 +66,25 @@ class JWTBearer(HTTPBearer):
             return cookie_auth
         return None
 
-    async def __call__(self, request: Request):  # pyright: ignore[reportIncompatibleMethodOverride]
+    async def __call__(self, request: Request, service=Depends(ServiceFactory(UserService))):  # pyright: ignore[reportIncompatibleMethodOverride]
         await super(JWTBearer, self).__call__(request)
+
         token = await self._get_token(request)
-        if token:
-            jwt_data = jwt_generator.decode_jwt(token)
-            if not jwt_data:
-                raise HTTPException(status_code=401, detail='Invalid token or expired token.')
-            db_user = await UserService().repository().get(int(jwt_data['sub']))
-            username = request.cookies.get('username')
-            if not username:
-                raise HTTPException(status_code=404, detail='Not authorized.')
-            if not db_user or db_user.username != username:
-                raise HTTPException(status_code=401, detail='User not found.')
-        else:
+
+        if not token:
             raise HTTPException(status_code=401, detail='Not authenticated.')
+
+        jwt_data = jwt_generator.decode_jwt(token)
+
+        if not jwt_data:
+            raise HTTPException(status_code=401, detail='Invalid token or expired token.')
+
+        user = await service.get_user_by_id(int(jwt_data['sub']))
+
+        if not user:
+            raise HTTPException(status_code=401, detail='User not found.')
+
+        if user.username != request.cookies.get('username'):
+            raise HTTPException(status_code=401, detail='Invalid credentials.')
+        
+        request.state.user = user

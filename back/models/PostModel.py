@@ -21,23 +21,11 @@ class PostModel(Base):
     views: Mapped[int] = mapped_column(server_default='0')
     created_at: Mapped[datetime] = mapped_column(DateTime(), server_default=func.now())
 
-    _is_liked: bool = False
-
-    @property
-    def is_liked(self) -> bool:
-        return self._is_liked
-
-    @is_liked.setter
-    def is_liked(self, value: bool):
-        self._is_liked = value
-
-    def is_liked_by(self, user_id: int) -> bool:
-        self._is_liked = any(relation.user_id == user_id for relation in self.likes_relations)
-        return self._is_liked
-
     author: Mapped['UserModel'] = relationship(back_populates='posts', lazy='joined')
     comments: Mapped[list['CommentModel']] = relationship(back_populates='post', lazy='joined')
-    likes_relations: Mapped[list['LikedPost']] = relationship(back_populates='post', lazy='joined')
+    likes_relations: Mapped[list['LikePostModel']] = relationship(back_populates='post', lazy='joined')
+    
+    is_liked: bool = False
 
     @property
     def likes(self):
@@ -48,5 +36,5 @@ class PostModel(Base):
         )
 
     @property
-    def hasImage(self) -> bool:
+    def has_image(self) -> bool:
         return bool(self.image)
