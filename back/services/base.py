@@ -12,6 +12,7 @@ ModelType = TypeVar('ModelType', bound=Base)
 
 class BaseService(Generic[RepositoryType]):
     repo: type[RepositoryType]
+
     def __init__(self, session: AsyncSession):
         self.repository = self.repo(session)
 
@@ -27,8 +28,8 @@ class BaseService(Generic[RepositoryType]):
     async def get_by_model(self, model: ModelType) -> Optional[ModelType]:
         return await self.repository.get_by_model(model)
 
-    async def get_all(self) -> list[Optional[ModelType]]:
-        return await self.repository.get_all()
+    async def get_all(self, offset: int = 0) -> list[Optional[ModelType]]:
+        return await self.repository.get_all(offset)
 
     async def update(self, id: int, **fields) -> None:
         if not fields:

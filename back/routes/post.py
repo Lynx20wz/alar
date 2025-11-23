@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Request, Response
 
-from deps import ServiceFactory, user_deps
+from deps import ServiceFactory
 from exceptions import PostNotFound
 from jwt import JWTBearer
 from models import LikePostModel, PostModel
@@ -15,24 +15,20 @@ post_router = APIRouter(
 
 
 @post_router.get('/', response_model=list[PostInfo])
-async def get_posts(request: Request, user: user_deps) -> list[PostModel]:
-    return await request.state.service.get_posts(user.id if user else 0)
+async def get_posts(request: Request) -> list[PostModel]:
+    return await request.state.service.get_posts()
 
 
 @post_router.get('/{post_id}', response_model=PostInfo)
-async def get_post(post_id: int, request: Request, user: user_deps) -> PostModel:
+async def get_post(request: Request, post_id: int, user_id: int = 0) -> PostModel:
     service = request.state.service
-    post = await service.get(post_id)
-    if not post:
-        raise PostNotFound()
-    post.is_liked = post.is_liked_by(user.id if user else 0)
-    return post
+    return await service.get_post(post_id, user_id)
 
 
 @post_router.get('/{post_id}/image')
 async def get_post_image(post_id: int, request: Request) -> Response:
     service = request.state.service
-    post = await service.get(post_id)
+    post = await service.get_post(post_id)
     if not post or not post.image:
         raise PostNotFound()
 
@@ -46,7 +42,7 @@ async def get_post_image(post_id: int, request: Request) -> Response:
 
 @post_router.post('/{post_id}/like', dependencies=[Depends(JWTBearer())])
 async def like_post(request: Request, post_id: int) -> BaseResponse:
-    service = request.state.session
+    service = request.state.service
     user = request.state.user
     post = await service.get_post(post_id)
     if not post:
@@ -65,7 +61,7 @@ async def add_post(
     request: Request,
     post: PostCreateInfo,
 ) -> BaseResponse:
-    service = request.state.session
+    service = request.state.service
     user = request.state.user
     post_id = await service.add(PostModel(**post.model_dump(), author_id=user.id))
-    return BaseResponse[int](data=post_id)
+    return BaseResponse[int](data=post_id.id)

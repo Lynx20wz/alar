@@ -1,44 +1,47 @@
-from typing import Annotated
 from fastapi import APIRouter, Depends, File, HTTPException, Request, Response, UploadFile
 
-from deps import ServiceFactory, user_deps
 from exceptions import ErrorResponse, UserNotFound
 from jwt import JWTBearer
 from models import UserModel
-from schemas import BaseResponse, FileResponse, UserInfo, UserResponse
-from services import UserService
+from schemas import BaseResponse, FileResponse, UserInfo
 
 user_router = APIRouter(
     prefix='/users',
     tags=['user'],
-    dependencies=[Depends(ServiceFactory(UserService))],
 )
 
 
 @user_router.get('/', dependencies=[Depends(JWTBearer())])
-async def get_me(user: user_deps) -> UserResponse:
+async def get_me(request: Request) -> BaseResponse[UserInfo]:
+    user = request.state.user
     if not user:
         raise UserNotFound()
-    return UserResponse(user=user)
+    return BaseResponse[UserInfo](data=user)
 
 
 @user_router.get('/{username}', responses={404: {'model': ErrorResponse}})
-async def get_user(service: Annotated[UserService, Depends(ServiceFactory(UserService))], username: str) -> UserResponse:
-    if not (user_db := await service.get_by(username=username)):
+async def get_user(request: Request, username: str) -> BaseResponse[UserInfo]:
+    service = request.state.service
+    user = await service.get_by(username=username)
+
+    if not user:
         raise UserNotFound()
-    return UserResponse(user=UserInfo.model_validate(user_db))
+
+    return BaseResponse[UserInfo](data=user)
 
 
 @user_router.get('/avatar/{username}', responses={404: {'model': ErrorResponse}})
 async def get_user_avatar(request: Request, username: str) -> Response:
-    service = request.state.session
-    if not (user_db := await service.get(UserModel(username=username))):
+    service = request.state.service
+    user = await service.get_by(username=username)
+
+    if not user:
         raise UserNotFound()
 
-    if not user_db.avatar:
+    if not user.avatar:
         raise HTTPException(status_code=404, detail='Avatar not found')
 
-    return FileResponse(user_db.avatar, 'avatar.png')
+    return FileResponse(user.avatar, 'avatar.png')
 
 
 @user_router.patch(
@@ -47,7 +50,7 @@ async def get_user_avatar(request: Request, username: str) -> Response:
     responses={404: {'model': ErrorResponse}},
 )
 async def set_user_avatar(request: Request, file: UploadFile = File(...)) -> BaseResponse:
-    service = request.state.session
+    service = request.state.service
     user = request.state.user
     await service.update(user.id, avatar=await file.read())
     return BaseResponse()
@@ -55,7 +58,7 @@ async def set_user_avatar(request: Request, file: UploadFile = File(...)) -> Bas
 
 @user_router.get('/banner/{username}', responses={404: {'model': ErrorResponse}})
 async def get_user_banner(request: Request, username: str) -> Response:
-    service = request.state.session
+    service = request.state.service
     user_db = await service.get(UserModel(username=username))
 
     if not user_db:
@@ -73,7 +76,7 @@ async def get_user_banner(request: Request, username: str) -> Response:
     responses={404: {'model': ErrorResponse}},
 )
 async def set_user_banner(request: Request, file: UploadFile = File(...)) -> BaseResponse:
-    service = request.state.session
+    service = request.state.service
     user = request.state.user
     await service.update(user.id, banner=await file.read())
     return BaseResponse()

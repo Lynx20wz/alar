@@ -1,8 +1,9 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Form, Request, Response
+from fastapi import APIRouter, Depends, Form, HTTPException, Path, Request, Response
 
 from deps import ServiceFactory
+from exceptions import NotCorrectPassword, UserNotFound
 from jwt import jwt_generator
 from models import UserModel
 from schemas import *
@@ -11,6 +12,7 @@ from services import UserService
 auth_router = APIRouter(
     prefix='/auth',
     tags=['auth'],
+    dependencies=[Depends(ServiceFactory(UserService))],
 )
 
 
@@ -34,41 +36,48 @@ async def set_auth_cookies(response, user: UserModel):
 
 @auth_router.post('/login')
 async def login(
-    service: Annotated[UserService, Depends(ServiceFactory(UserService))],
+    request: Request,
     response: Response,
     data: UserLoginData = Form(),
 ) -> BaseResponse:
-    user = await service.repository.get_by(username=data.username, password=data.password)
-    if not user:
-        return BaseResponse(success=False, msg='User not found.')
+    service: UserService = request.state.service
 
-    if not user.check_password(data.password):
+    try:
+        user = await service.login(data.username, data.password)
+    except UserNotFound:
+        return BaseResponse(success=False, msg='User not found.')
+    except NotCorrectPassword:
         return BaseResponse(success=False, msg='Not correct password.')
+
     await set_auth_cookies(response, user)
-    return BaseResponse()
+    return BaseResponse[UserModel](data=user)
 
 
 @auth_router.get('/exists', response_model=UserExistsResponse)
-async def check_user_exists(request: Request, username: str) -> UserExistsResponse:
-    userModel = UserModel(username=username)
-    service = request.state.service
-    if not await service.get_user(userModel):
-        return UserExistsResponse(exists=False, username=username)
-    return UserExistsResponse(exists=True, username=username)
+async def check_user_exists(
+    request: Request,   
+    user_id: Annotated[Optional[int], Path(..., description='Have priority over username')] = None,
+    username: Optional[str] = None,
+) -> UserExistsResponse:
+    if not user_id and not username:
+        raise HTTPException(status_code=422, detail='user_id or username must be provided')
+
+    service: UserService = request.state.service
+
+    user_id, username = await service.get_base_info(user_id, username)
+
+    if user_id:
+        return UserExistsResponse(user_id=user_id, username=username, exists=True)
+    else:
+        return UserExistsResponse(exists=False)
 
 
 @auth_router.post('/user', status_code=201)
 async def register(
     request: Request, response: Response, data: UserRegisterData = Form()
 ) -> BaseResponse:
-    user = UserModel(
-        email=data.email,
-        password=data.password,
-        username=data.username,
-        avatar=await data.avatar.read() if data.avatar else None,
-        banner=await data.banner.read() if data.banner else None,
-    )
-    service = request.state.service
-    user_id = await service.add_user(user)
-    await set_auth_cookies(response, UserModel(id=user_id, username=data.username))
-    return BaseResponse()
+    service: UserService = request.state.service
+    user = await service.add_user(data)
+
+    await set_auth_cookies(response, UserModel(id=user.id, username=user.username))
+    return BaseResponse[UserModel](data=user)

@@ -130,14 +130,10 @@ class BaseResponse(BaseModel, Generic[T]):
     data: Optional[T] = None
 
 
-class UserResponse(BaseResponse):
-    user: UserInfo
-    model_config = {'from_attributes': True}
-
-
 class UserExistsResponse(BaseModel):
     exists: bool
-    username: str
+    username: Optional[str] = None
+    user_id: Optional[int] = None
 
 
 class FileResponse(Response):

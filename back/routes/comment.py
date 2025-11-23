@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Request
 
-from deps import ServiceFactory, user_deps
+from deps import ServiceFactory
 from exceptions import CommentNotFound
 from jwt import JWTBearer
 from models import CommentModel
@@ -15,10 +15,12 @@ comment_router = APIRouter(
 
 
 @comment_router.get('/')
-async def get_comments(session, request: Request) -> list[CommentInfoWithPost]:
+async def get_comments(request: Request) -> list[CommentInfoWithPost]:
+    service = request.state.service
+    
     return [
         CommentInfoWithPost.model_validate(comment)
-        for comment in await request.state.service.get_comments(session)
+        for comment in await service.get_all()
     ]
 
 
@@ -26,6 +28,7 @@ async def get_comments(session, request: Request) -> list[CommentInfoWithPost]:
 async def get_comment(comment_id: int, request: Request) -> CommentInfoWithPost:
     service = request.state.service
     comment = await service.get_comment(comment_id)
+    
     if not comment:
         raise CommentNotFound()
     return CommentInfoWithPost.model_validate(comment)
