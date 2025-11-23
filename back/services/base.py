@@ -1,4 +1,3 @@
-from abc import ABC
 from typing import Generic, Optional, TypeVar
 
 from sqlalchemy.ext.asyncio import AsyncSession

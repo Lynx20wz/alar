@@ -20,6 +20,7 @@ node_modules
 */.svelte-kit
 /build
 /back/.ruff_cache
+/back/.coverage
 
 # OS
 .DS_Store

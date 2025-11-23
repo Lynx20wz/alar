@@ -1,6 +1,6 @@
 from typing import Optional
 
-from exceptions import NotCorrectPassword, UserNotFound
+from exceptions import NotCorrectPassword, UserAlreadyExists, UserNotFound
 from models import UserModel
 from repository import UserRepository
 from schemas import LikesInfo, LikesType, UserRegisterData
@@ -70,6 +70,9 @@ class UserService(BaseService[UserRepository]):
         )
 
     async def add_user(self, data: UserRegisterData) -> UserModel:
+        if await self.get_user_by_username(data.username):
+            raise UserAlreadyExists()
+        
         user_model = UserModel(
             username=data.username,
             email=data.email,
@@ -77,4 +80,5 @@ class UserService(BaseService[UserRepository]):
             banner=data.banner.read() if data.banner else None,
             avatar=data.avatar.read() if data.avatar else None,
         )
+        
         return await self.repository.add(user_model)

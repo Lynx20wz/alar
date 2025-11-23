@@ -27,6 +27,9 @@ class PostNotFound(NotFoundError):
 class CommentNotFound(NotFoundError):
     detail = 'Comment not found'
 
+class UserAlreadyExists(AppException):
+    status_code = 409
+    detail = 'User already exists'
 
 class NotCorrectPassword(AppException):
     status_code = 401
@@ -35,12 +38,3 @@ class NotCorrectPassword(AppException):
 
 class ErrorResponse(BaseModel):
     detail: str
-
-
-def setup_exception_handlers(app: FastAPI):
-    @app.exception_handler(AppException)
-    async def app_exception_handler(request: Request, exc: AppException):
-        return JSONResponse(
-            status_code=exc.status_code,
-            content={'detail': exc.detail},
-        )

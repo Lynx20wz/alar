@@ -5,7 +5,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from db import create_tables
-from exceptions import setup_exception_handlers
 from routes import *
 
 
@@ -27,8 +26,6 @@ app.add_middleware(
 
 for router in all_routers:
     app.include_router(router)
-
-setup_exception_handlers(app)
 
 if __name__ == '__main__':
     from uvicorn import Config, Server
