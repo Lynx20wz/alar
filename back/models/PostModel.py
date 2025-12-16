@@ -23,8 +23,10 @@ class PostModel(Base):
 
     author: Mapped['UserModel'] = relationship(back_populates='posts', lazy='joined')
     comments: Mapped[list['CommentModel']] = relationship(back_populates='post', lazy='joined')
-    likes_relations: Mapped[list['LikePostModel']] = relationship(back_populates='post', lazy='joined')
-    
+    likes_relations: Mapped[list['LikePostModel']] = relationship(
+        back_populates='post', lazy='joined'
+    )
+
     is_liked: bool = False
 
     @property

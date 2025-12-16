@@ -1,9 +1,7 @@
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from fastapi import HTTPException
 
 
-class AppException(Exception):
+class AppException(HTTPException):
     status_code: int = 400
     detail: str = 'Unexpected error'
 
@@ -13,28 +11,30 @@ class AppException(Exception):
 
 
 class NotFoundError(AppException):
-    status_code = 404
+    status_code: int = 404
 
 
 class UserNotFound(NotFoundError):
-    detail = 'User not found'
+    detail: str = 'User not found'
 
 
 class PostNotFound(NotFoundError):
-    detail = 'Post not found'
+    detail: str = 'Post not found'
+
+
+class ImageNotFound(NotFoundError):
+    detail: str = 'Image not found'
 
 
 class CommentNotFound(NotFoundError):
-    detail = 'Comment not found'
+    detail: str = 'Comment not found'
+
 
 class UserAlreadyExists(AppException):
-    status_code = 409
-    detail = 'User already exists'
+    status_code: int = 409
+    detail: str = 'User already exists'
+
 
 class NotCorrectPassword(AppException):
-    status_code = 401
-    detail = 'Incorrect password'
-
-
-class ErrorResponse(BaseModel):
-    detail: str
+    status_code: int = 401
+    detail: str = 'Incorrect password'

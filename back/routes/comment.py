@@ -1,48 +1,35 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends
 
-from deps import ServiceFactory
+from deps import comment_service_deps
 from exceptions import CommentNotFound
 from jwt import JWTBearer
 from models import CommentModel
-from schemas import BaseResponse, CommentInfoWithPost
-from services import CommentService
+from schemas import BaseResponse, CommentCreateInfo, CommentInfo
 
 comment_router = APIRouter(
-    prefix='/comment',
-    tags=['comment'],
-    dependencies=[Depends(ServiceFactory(CommentService))],
+    prefix='/comments',
+    tags=['comments'],
 )
 
 
 @comment_router.get('/')
-async def get_comments(request: Request) -> list[CommentInfoWithPost]:
-    service = request.state.service
-    
-    return [
-        CommentInfoWithPost.model_validate(comment)
-        for comment in await service.get_all()
-    ]
+async def get_comments(service: comment_service_deps) -> list[CommentInfo]:
+    return [CommentInfo.model_validate(comment) for comment in await service.get_all()]
 
 
 @comment_router.get('/{comment_id}')
-async def get_comment(comment_id: int, request: Request) -> CommentInfoWithPost:
-    service = request.state.service
+async def get_comment(service: comment_service_deps, comment_id: int) -> CommentInfo:
     comment = await service.get_comment(comment_id)
-    
+
     if not comment:
         raise CommentNotFound()
-    return CommentInfoWithPost.model_validate(comment)
+    return CommentInfo.model_validate(comment)
 
 
-@comment_router.post('/', dependencies=[Depends(JWTBearer())])
+@comment_router.post('/', tags=['Authorized'], dependencies=[Depends(JWTBearer())])
 async def add_comment(
-    comment: CommentInfoWithPost,
-    request: Request,
+    service: comment_service_deps,
+    comment: CommentCreateInfo,
 ) -> BaseResponse:
-    service = request.state.service
-    user = request.state.user
-    post = await service.get(comment.post.id)
-    if not post:
-        raise CommentNotFound()
-    commentOBJ = service.add(CommentModel(**comment.model_dump(), author_id=user.id))
-    return BaseResponse[int](data=commentOBJ)
+    new_comment = await service.add(CommentModel(**comment.model_dump()))
+    return BaseResponse[int](data=new_comment.id)

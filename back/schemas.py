@@ -55,7 +55,7 @@ class PostCreateInfo(BaseModel):
 
 class PostShortInfo(BaseModel):
     id: int
-    author: UserShortInfo
+    author: UserShortInfo | None
     created_at: datetime
     title: str
     views: int
@@ -73,18 +73,23 @@ class PostInfo(PostShortInfo):
     comments: List['CommentInfo'] = []
 
 
-class CommentInfo(BaseModel):
-    id: int
-    author: UserShortInfo
-    created_at: datetime
+class CommentCreateInfo(BaseModel):
     content: str
+    author_id: int
+    post_id: int
 
     model_config = {
         'from_attributes': True,
     }
 
 
-class CommentInfoWithPost(CommentInfo):
+class CommentShortInfo(CommentCreateInfo):
+    id: int
+    author: UserShortInfo
+    created_at: datetime
+
+
+class CommentInfo(CommentShortInfo):
     post: PostShortInfo
 
 
@@ -132,8 +137,6 @@ class BaseResponse(BaseModel, Generic[T]):
 
 class UserExistsResponse(BaseModel):
     exists: bool
-    username: Optional[str] = None
-    user_id: Optional[int] = None
 
 
 class FileResponse(Response):

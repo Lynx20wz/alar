@@ -1,13 +1,12 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Form, HTTPException, Path, Request, Response
+from fastapi import APIRouter, Form, HTTPException, Path, Response
 
 from deps import user_service_deps
 from exceptions import NotCorrectPassword, UserAlreadyExists, UserNotFound
 from jwt import jwt_generator
 from models import UserModel
 from schemas import *
-from services import UserService
 
 auth_router = APIRouter(
     prefix='/auth',
@@ -74,9 +73,6 @@ async def check_user_exists(
     if not user_id and not username:
         raise HTTPException(status_code=422, detail='user_id or username must be provided')
 
-    user_id, username = await service.get_base_info(user_id, username)
-
-    if user_id:
-        return UserExistsResponse(user_id=user_id, username=username, exists=True)
-    else:
-        return UserExistsResponse(exists=False)
+    if await service.check_exists(user_id, username):
+        return UserExistsResponse(exists=True)
+    return UserExistsResponse(exists=False)
