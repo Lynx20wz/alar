@@ -32,8 +32,4 @@ indent-style = "space"
 quote-style = "single"
 
 [dependency-groups]
-dev = [
-    "httpx>=0.28.1",
-    "pytest>=9.0.1",
-    "pytest-cov>=7.0.0",
-]
+dev = ["httpx>=0.28.1", "pytest>=9.0.1", "pytest-cov>=7.0.0"]

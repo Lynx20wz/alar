@@ -4,7 +4,6 @@
 */.env
 */.venv
 */__pycache__
-.ruff_cache/
 
 node_modules
 
@@ -21,6 +20,8 @@ node_modules
 /build
 /back/.ruff_cache
 /back/.coverage
+/back/.pytest_cache
+
 
 # OS
 .DS_Store

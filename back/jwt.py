@@ -66,7 +66,7 @@ class JWTBearer(HTTPBearer):
             return cookie_auth
         return None
 
-    async def __call__(self, request: Request, service=Depends(ServiceFactory(UserService))):  # pyright: ignore[reportIncompatibleMethodOverride]
+    async def __call__(self, request: Request, service=Depends(ServiceFactory(UserService))):
         await super(JWTBearer, self).__call__(request)
 
         token = await self._get_token(request)
@@ -86,5 +86,5 @@ class JWTBearer(HTTPBearer):
 
         if user.username != request.cookies.get('username'):
             raise HTTPException(status_code=401, detail='Invalid credentials.')
-        
+
         request.state.user = user
