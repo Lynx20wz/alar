@@ -19,20 +19,8 @@ class UserService(BaseService[UserRepository]):
     async def get_user_by_id(self, user_id: int) -> UserModel:
         return self._get_user_or_raise(await self.repository.get(user_id))
 
-    async def get_user_by_username(self, username: str) -> Optional[UserModel]:
-        return self._get_user_or_raise(await self.repository.get_by(username=username))
-
-    async def get_base_info(
-        self, user_id: Optional[int] = None, username: Optional[str] = None
-    ) -> tuple[int, str]:
-        if user_id:
-            user = self._get_user_or_raise(await self.get_user_by_id(user_id))
-        elif username:
-            user = self._get_user_or_raise(await self.get_user_by_username(username))
-        else:
-            raise ValueError
-
-        return user.id, user.username
+    async def get_user_by_username(self, username: str) -> UserModel:
+        return self._get_user_or_raise(await self.repository.get_by(username=username.lower()))
 
     async def login(self, username: str, password: str) -> UserModel:
         user = self._get_user_or_raise(await self.get_user_by_username(username))
@@ -69,16 +57,31 @@ class UserService(BaseService[UserRepository]):
             objects=[relation.post for relation in user.like_posts_relations],
         )
 
+    async def check_exists(
+        self, user_id: Optional[int] = None, username: Optional[str] = None
+    ) -> bool:
+        try:
+            if user_id:
+                await self.get_user_by_id(user_id)
+            elif username:
+                await self.get_user_by_username(username)
+        except UserNotFound:
+            return False
+        else:
+            return True
+
     async def add_user(self, data: UserRegisterData) -> UserModel:
-        if await self.get_user_by_username(data.username):
+        try:
+            await self.get_user_by_username(data.username)
+        except UserNotFound:
+            user_model = UserModel(
+                username=data.username,
+                email=data.email,
+                password=data.password,
+                banner=data.banner.read() if data.banner else None,
+                avatar=data.avatar.read() if data.avatar else None,
+            )
+
+            return await self.repository.add(user_model)
+        else:
             raise UserAlreadyExists()
-        
-        user_model = UserModel(
-            username=data.username,
-            email=data.email,
-            password=data.password,
-            banner=data.banner.read() if data.banner else None,
-            avatar=data.avatar.read() if data.avatar else None,
-        )
-        
-        return await self.repository.add(user_model)
