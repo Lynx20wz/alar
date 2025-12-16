@@ -1,7 +1,7 @@
 from abc import ABC
 from typing import Any, Generic, Optional, TypeVar
 
-from sqlalchemy import select, update
+from sqlalchemy import select, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import Base
@@ -40,10 +40,10 @@ class BaseRepository(ABC, Generic[ModelType]):
         result = await self.session.scalars(select(self.model).limit(10).offset(offset))
         return list(result.unique())
 
-    async def update(self, id: int, **fields: dict[str, Any]) -> None:
+    async def update(self, obj: ModelType, **fields: dict[str, Any]) -> None:
         stmt = (
             update(self.model)
-            .where(self.model.id == id)
+            .where(self.model.id == obj.id)
             .values(**fields)
             .execution_options(synchronize_session='fetch')
         )
@@ -52,5 +52,5 @@ class BaseRepository(ABC, Generic[ModelType]):
         await self.session.commit()
 
     async def delete(self, obj: ModelType) -> None:
-        await self.session.delete(obj)
+        await self.session.execute(delete(self.model).where(self.model.id == obj.id))
         await self.session.commit()

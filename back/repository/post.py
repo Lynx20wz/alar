@@ -1,6 +1,6 @@
 from typing import Optional
 
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.orm import joinedload, selectinload
 
 from models import LikePostModel, PostModel
@@ -21,6 +21,18 @@ class PostRepository(BaseRepository[PostModel]):
                 selectinload(PostModel.likes_relations).joinedload(LikePostModel.user),
             )
         )
+
+    async def add_like(self, like: LikePostModel):
+        self.session.add(like)
+        await self.session.commit()
+
+    async def delete_like(self, like: LikePostModel):
+        await self.session.execute(
+            delete(LikePostModel).where(
+                LikePostModel.post_id == like.post_id, LikePostModel.user_id == like.user_id
+            )
+        )
+        await self.session.commit()
 
     async def get_all_for_user(self, user_id: int) -> list[PostModel]:
         return list(
