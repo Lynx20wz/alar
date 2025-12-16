@@ -33,3 +33,7 @@ quote-style = "single"
 
 [dependency-groups]
 dev = ["httpx>=0.28.1", "pytest>=9.0.1", "pytest-cov>=7.0.0"]
+
+[tool.pytest]
+pythonpath = ["."]
+testpaths = ["tests"]

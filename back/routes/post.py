@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, Request, Response
+from typing import Annotated
 
-from deps import post_service_deps
+from fastapi import APIRouter, Query, Response
+
+from deps import auth_deps, post_service_deps, user_deps
 from exceptions import ImageNotFound
-from jwt import JWTBearer
 from models import PostModel
 from schemas import BaseResponse, PostCreateInfo, PostInfo
 
@@ -36,20 +37,21 @@ async def get_post_image(service: post_service_deps, post_id: int) -> Response:
     return Response(content=post.image, media_type='image/png', headers=headers)
 
 
-@post_router.post('/{post_id}/like', tags=['Authorized'], dependencies=[Depends(JWTBearer())])
-async def like_post(service: post_service_deps, request: Request, post_id: int) -> BaseResponse:
-    user = request.state.user
+@post_router.post('/like', tags=['Authorized'], dependencies=[auth_deps])
+async def like_post(
+    service: post_service_deps,
+    user: user_deps,
+    post_id: Annotated[int, Query(description='The id of the post to like', alias='p')],
+) -> BaseResponse[bool]:
     current_status = await service.change_like_status(post_id, user.id)
     return BaseResponse[bool](data=current_status)
 
 
-@post_router.post('/', status_code=201, tags=['Authorized'], dependencies=[Depends(JWTBearer())])
+@post_router.post('/', status_code=201, tags=['Authorized'], dependencies=[auth_deps])
 async def add_post(
     service: post_service_deps,
-    request: Request,
+    user: user_deps,
     post: PostCreateInfo,
-) -> BaseResponse:
-    user = request.state.user
-
+) -> BaseResponse[int]:
     post_id = await service.add(PostModel(**post.model_dump(), author_id=user.id))
     return BaseResponse[int](data=post_id.id)

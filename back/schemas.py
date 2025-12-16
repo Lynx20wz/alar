@@ -130,8 +130,6 @@ class UserRegisterData(UserLoginData):
 
 # Responses
 class BaseResponse(BaseModel, Generic[T]):
-    success: bool = True
-    msg: str = 'Success'
     data: Optional[T] = None
 
 

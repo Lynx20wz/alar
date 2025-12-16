@@ -1,8 +1,7 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 
-from deps import comment_service_deps
+from deps import comment_service_deps, auth_deps
 from exceptions import CommentNotFound
-from jwt import JWTBearer
 from models import CommentModel
 from schemas import BaseResponse, CommentCreateInfo, CommentInfo
 
@@ -26,7 +25,7 @@ async def get_comment(service: comment_service_deps, comment_id: int) -> Comment
     return CommentInfo.model_validate(comment)
 
 
-@comment_router.post('/', tags=['Authorized'], dependencies=[Depends(JWTBearer())])
+@comment_router.post('/', tags=['Authorized'], dependencies=[auth_deps])
 async def add_comment(
     service: comment_service_deps,
     comment: CommentCreateInfo,
