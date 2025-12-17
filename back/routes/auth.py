@@ -3,7 +3,6 @@ from typing import Annotated
 from fastapi import APIRouter, Form, HTTPException, Path, Response
 
 from deps import user_service_deps
-from exceptions import NotCorrectPassword, UserAlreadyExists, UserNotFound
 from jwt import jwt_generator
 from models import UserModel
 from schemas import *
@@ -38,12 +37,7 @@ async def login(
     service: user_service_deps,
     data: UserLoginData = Form(),
 ) -> BaseResponse[UserInfo]:
-    try:
-        user = await service.login(data.username, data.password)
-    except UserNotFound:
-        return BaseResponse(success=False, msg='User not found')
-    except NotCorrectPassword:
-        return BaseResponse(success=False, msg='Not correct password')
+    user = await service.login(data.username, data.password)
 
     await set_auth_cookies(response, user)
     return BaseResponse(data=UserInfo.model_validate(user))
@@ -55,10 +49,7 @@ async def register(
     service: user_service_deps,
     data: UserRegisterData = Form(),
 ) -> BaseResponse[UserInfo]:
-    try:
-        user = await service.add_user(data)
-    except UserAlreadyExists:
-        return BaseResponse(success=False, msg='User already exists')
+    user = await service.add_user(data)
 
     await set_auth_cookies(response, UserModel(id=user.id, username=user.username))
     return BaseResponse(data=UserInfo.model_validate(user))
