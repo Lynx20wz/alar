@@ -1,13 +1,14 @@
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from exceptions import CommentNotFound
 from models import CommentModel
 from repository import CommentRepository
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from .post import PostService
 from .base import BaseService
+from .post import PostService
 
 
-class CommentService(BaseService[CommentRepository]):
+class CommentService(BaseService[CommentRepository, CommentModel]):
     repo = CommentRepository
 
     def __init__(self, session: AsyncSession):

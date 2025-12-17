@@ -8,7 +8,7 @@ from schemas import LikesInfo, LikesType, UserRegisterData
 from .base import BaseService
 
 
-class UserService(BaseService[UserRepository]):
+class UserService(BaseService[UserRepository, UserModel]):
     repo = UserRepository
 
     def _get_user_or_raise(self, user: UserModel | None) -> UserModel:

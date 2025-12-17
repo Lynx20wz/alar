@@ -2,15 +2,15 @@ from typing import Generic, Optional, TypeVar
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from exceptions import NotFoundError
 from db import Base
+from exceptions import NotFoundError
 from repository import BaseRepository
 
 RepositoryType = TypeVar('RepositoryType', bound=BaseRepository)
 ModelType = TypeVar('ModelType', bound=Base)
 
 
-class BaseService(Generic[RepositoryType]):
+class BaseService(Generic[RepositoryType, ModelType]):
     repo: type[RepositoryType]
 
     def __init__(self, session: AsyncSession):

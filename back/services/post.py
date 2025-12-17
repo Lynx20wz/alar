@@ -1,11 +1,11 @@
 from exceptions import PostNotFound
-from models import PostModel, LikePostModel
+from models import LikePostModel, PostModel
 from repository import PostRepository
 
 from .base import BaseService
 
 
-class PostService(BaseService[PostRepository]):
+class PostService(BaseService[PostRepository, PostModel]):
     repo = PostRepository
 
     def _get_post_or_raise(self, post: PostModel | None) -> PostModel:
