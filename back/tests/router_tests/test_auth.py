@@ -75,9 +75,8 @@ class TestAuth:
 
         json_response = response.json()
 
-        assert response.status_code == 200
-        assert not json_response['success']
-        assert json_response['msg'] == 'User not found'
+        assert response.status_code == 404
+        assert json_response['detail'] == 'User not found'
 
     def test_register_success(self):
         self.mock_service.add_user.return_value = self.mock_user
@@ -118,6 +117,5 @@ class TestAuth:
 
         json_response = response.json()
 
-        assert response.status_code == 201
-        assert not json_response['success']
-        assert json_response['msg'] == 'User already exists'
+        assert response.status_code == 409
+        assert json_response['detail'] == 'User already exists'

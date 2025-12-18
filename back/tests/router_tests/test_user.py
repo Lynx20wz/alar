@@ -15,19 +15,17 @@ class TestUser:
     def setup(self, get_mock_user):
         self.mock_service = AsyncMock()
 
-        self.mock_user = get_mock_user
-
         self.mock_jwt = AsyncMock()
         self.mock_jwt.__call__ = lambda: ...
 
         app.dependency_overrides[user_service_factory] = lambda: self.mock_service
         app.dependency_overrides[jwt_factory] = lambda: self.mock_jwt
-        app.dependency_overrides[user_factory] = lambda: self.mock_user
+        app.dependency_overrides[user_factory] = lambda: get_mock_user
 
-    def test_get_user_success(self):
-        self.mock_service.get_user_by_username.return_value = self.mock_user
+    def test_get_user_success(self, get_mock_user):
+        self.mock_service.get_user_by_username.return_value = get_mock_user
 
-        response = client.get('/users/test123')
+        response = client.get('/users?u=test123')
 
         self.mock_service.get_user_by_username.assert_called_once_with('test123')
 
@@ -39,7 +37,7 @@ class TestUser:
     def test_get_user_not_found(self):
         self.mock_service.get_user_by_username.side_effect = UserNotFound()
 
-        response = client.get('/users/test')
+        response = client.get('/users?u=test')
 
         self.mock_service.get_user_by_username.assert_called_once_with('test')
 
@@ -54,9 +52,38 @@ class TestUser:
         assert response.status_code == 200
         assert json_response['data']['id'] == 1
 
-    def test_get_user_avatar_success(self):
-        response = client.get('/users/avatar/test123')
+    def test_get_user_avatar_success(self, get_mock_user):
+        self.mock_service.get_user_by_username.return_value = get_mock_user
+
+        response = client.get('/users/avatar?u=test123')
+
+        self.mock_service.get_user_by_username.assert_called_once_with('test123')
+
+        assert response.status_code == 200
+        assert response.content == b'x'
+
+    def test_get_user_avatar_user_not_found(self):
+        self.mock_service.get_user_by_username.side_effect = UserNotFound()
+
+        response = client.get('/users/avatar?u=test')
+
+        self.mock_service.get_user_by_username.assert_called_once_with('test')
 
         json_response = response.json()
 
-        assert response.status_code == 200
+        assert response.status_code == 404
+        assert json_response['detail'] == 'User not found'
+
+    def test_get_user_avatar_not_found(self, get_mock_user):
+        mock_user = get_mock_user
+        mock_user.avatar = None
+        self.mock_service.get_user_by_username.return_value = mock_user
+
+        response = client.get('/users/avatar?u=test')
+
+        self.mock_service.get_user_by_username.assert_called_once_with('test')
+
+        json_response = response.json()
+
+        assert response.status_code == 404
+        assert json_response['detail'] == 'Image not found'
