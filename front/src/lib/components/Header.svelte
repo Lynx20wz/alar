@@ -3,7 +3,6 @@
   import { getTranslate } from "@tolgee/svelte";
 
   const user = page.data.user;
-
   const { t } = getTranslate();
   let showModal = $state(false);
 </script>
@@ -94,7 +93,7 @@
   >
     <img
       class="header__avatar"
-      src={`/api/users/avatar/${user?.username}`}
+      src={`/api/users/avatar?u=${user?.username}`}
       alt="avatar"
     />
   </a>
