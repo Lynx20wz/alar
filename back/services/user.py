@@ -1,8 +1,6 @@
-from typing import Optional
-
 from exceptions import NotCorrectPassword, UserAlreadyExists, UserNotFound
 from models import UserModel
-from repository import UserRepository
+from repositories import UserRepository
 from schemas import LikesInfo, LikesType, UserRegisterData
 
 from .base import BaseService

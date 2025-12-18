@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import Base
 from exceptions import NotFoundError
-from repository import BaseRepository
+from repositories import BaseRepository
 
 RepositoryType = TypeVar('RepositoryType', bound=BaseRepository)
 ModelType = TypeVar('ModelType', bound=Base)

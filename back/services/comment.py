@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from exceptions import CommentNotFound
 from models import CommentModel
-from repository import CommentRepository
+from repositories import CommentRepository
 
 from .base import BaseService
 from .post import PostService

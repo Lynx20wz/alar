@@ -1,6 +1,6 @@
 from exceptions import PostNotFound
 from models import LikePostModel, PostModel
-from repository import PostRepository
+from repositories import PostRepository
 
 from .base import BaseService
 
