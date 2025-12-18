@@ -42,7 +42,7 @@ class UserModel(Base):
 
     @validates('username')
     def convert_lower(self, key, value):
-        return value.lower()
+        return value
 
     @property
     def password(self):

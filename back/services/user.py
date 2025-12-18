@@ -20,7 +20,7 @@ class UserService(BaseService[UserRepository, UserModel]):
         return self._get_user_or_raise(await self.repository.get(user_id))
 
     async def get_user_by_username(self, username: str) -> UserModel:
-        return self._get_user_or_raise(await self.repository.get_by(username=username.lower()))
+        return self._get_user_or_raise(await self.repository.get_by(username=username))
 
     async def login(self, username: str, password: str) -> UserModel:
         user = self._get_user_or_raise(await self.get_user_by_username(username))
@@ -57,18 +57,22 @@ class UserService(BaseService[UserRepository, UserModel]):
             objects=[relation.post for relation in user.like_posts_relations],
         )
 
-    async def check_exists(
-        self, user_id: Optional[int] = None, username: Optional[str] = None
-    ) -> bool:
+    async def check_exists(self, username: str) -> bool:
+        """Checks if user exists.
+
+        The self.get_user_by_username returns UserModel or raise UserNotFound
+        so if it raise the exception, user don't exists.
+
+        Also, user counts as exists if the given username is the same as the username of the user reduced to lowercase
+
+        Returns:
+            bool: True if user exists
+        """
         try:
-            if user_id:
-                await self.get_user_by_id(user_id)
-            elif username:
-                await self.get_user_by_username(username)
+            user = await self.get_user_by_username(username)
+            return user.username.lower() == username.lower()
         except UserNotFound:
             return False
-        else:
-            return True
 
     async def add_user(self, data: UserRegisterData) -> UserModel:
         try:

@@ -1,6 +1,4 @@
-from typing import Annotated
-
-from fastapi import APIRouter, Form, HTTPException, Path, Response
+from fastapi import APIRouter, Form, Response
 
 from deps import user_service_deps
 from jwt import jwt_generator
@@ -31,7 +29,13 @@ async def set_auth_cookies(response, user: UserModel):
     )
 
 
-@auth_router.post('/login')
+@auth_router.post(
+    '/login',
+    responses={
+        401: {'description': 'Incorrect password'},
+        404: {'description': 'User not found'},
+    },
+)
 async def login(
     response: Response,
     service: user_service_deps,
@@ -43,7 +47,7 @@ async def login(
     return BaseResponse(data=UserInfo.model_validate(user))
 
 
-@auth_router.post('/user', status_code=201)
+@auth_router.post('/user', status_code=201, responses={409: {'description': 'User already exists'}})
 async def register(
     response: Response,
     service: user_service_deps,
@@ -58,12 +62,7 @@ async def register(
 @auth_router.get('/exists', response_model=UserExistsResponse)
 async def check_user_exists(
     service: user_service_deps,
-    user_id: Annotated[Optional[int], Path(..., description='Have priority over username')] = None,
-    username: Optional[str] = None,
+    username: str,
 ) -> UserExistsResponse:
-    if not user_id and not username:
-        raise HTTPException(status_code=422, detail='user_id or username must be provided')
-
-    if await service.check_exists(user_id, username):
-        return UserExistsResponse(exists=True)
-    return UserExistsResponse(exists=False)
+    exists = True if await service.check_exists(username) else False
+    return UserExistsResponse(exists=exists)
