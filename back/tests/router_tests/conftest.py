@@ -10,8 +10,8 @@ def get_mock_user():
         username='test123',
         email='test@development.com',
         _password='$2b$12$K/L403O4yazJjSSdjEi1wOFe0SyeOM0g4QJeyny9fcWJqJtUJISZG',  # 111
-        banner=None,
         avatar=b'x',
+        banner=b'x',
         bio=None,
         posts=[],
         comments=[],

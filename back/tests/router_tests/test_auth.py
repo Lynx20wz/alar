@@ -119,3 +119,27 @@ class TestAuth:
 
         assert response.status_code == 409
         assert json_response['detail'] == 'User already exists'
+
+    def test_check_user_exists_exists(self):
+        self.mock_service.check_exists.return_value = True
+
+        response = client.get('/auth/exists?u=test123')
+
+        self.mock_service.check_exists.assert_called_once_with('test123')
+
+        json_response = response.json()
+
+        assert response.status_code == 200
+        assert json_response['exists']
+
+    def test_check_user_exists_not_exists(self):
+        self.mock_service.check_exists.return_value = False
+
+        response = client.get('/auth/exists?u=test123')
+
+        self.mock_service.check_exists.assert_called_once_with('test123')
+
+        json_response = response.json()
+
+        assert response.status_code == 200
+        assert not json_response['exists']

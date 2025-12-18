@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Form, Response
+from typing import Annotated
+
+from fastapi import APIRouter, Form, Query, Response
 
 from deps import user_service_deps
 from jwt import jwt_generator
@@ -62,7 +64,7 @@ async def register(
 @auth_router.get('/exists', response_model=UserExistsResponse)
 async def check_user_exists(
     service: user_service_deps,
-    username: str,
+    username: Annotated[str, Query(description='The username to check', alias='u')],
 ) -> UserExistsResponse:
     exists = True if await service.check_exists(username) else False
     return UserExistsResponse(exists=exists)
