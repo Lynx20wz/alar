@@ -1,3 +1,6 @@
+import sys
+
+from loguru import logger
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -20,3 +23,10 @@ class Config(BaseSettings):
 
 
 config = Config()  # type: ignore
+
+logger.remove()
+logger.add(
+    sink=sys.stdout,
+    level='DEBUG',
+    format='{time:H:mm:ss} | "{function}" | {line} ({module}) | <level>{level}</level> | {message}',
+)
