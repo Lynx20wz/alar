@@ -1,6 +1,8 @@
-from fastapi import APIRouter
+from typing import Annotated
 
-from deps import comment_service_deps, auth_deps
+from fastapi import APIRouter, Query
+
+from deps import auth_deps, comment_service_deps, user_deps
 from exceptions import CommentNotFound
 from models import CommentModel
 from schemas import BaseResponse, CommentCreateInfo, CommentInfo
@@ -11,13 +13,15 @@ comment_router = APIRouter(
 )
 
 
-@comment_router.get('/')
+@comment_router.get('')
 async def get_comments(service: comment_service_deps) -> list[CommentInfo]:
     return [CommentInfo.model_validate(comment) for comment in await service.get_all()]
 
 
-@comment_router.get('/{comment_id}')
-async def get_comment(service: comment_service_deps, comment_id: int) -> CommentInfo:
+@comment_router.get('')
+async def get_comment(
+    service: comment_service_deps, comment_id: Annotated[int, Query(alias='c')]
+) -> CommentInfo:
     comment = await service.get_comment(comment_id)
 
     if not comment:
@@ -25,10 +29,16 @@ async def get_comment(service: comment_service_deps, comment_id: int) -> Comment
     return CommentInfo.model_validate(comment)
 
 
-@comment_router.post('/', tags=['Authorized'], dependencies=[auth_deps])
+@comment_router.post('', tags=['Authorized'], dependencies=[auth_deps], response_model=CommentInfo)
 async def add_comment(
     service: comment_service_deps,
-    comment: CommentCreateInfo,
-) -> BaseResponse:
-    new_comment = await service.add(CommentModel(**comment.model_dump()))
-    return BaseResponse[int](data=new_comment.id)
+    user: user_deps,
+    comment_info: CommentCreateInfo,
+) -> CommentModel:
+    return await service.add(
+        CommentModel(
+            content=comment_info.content,
+            post_id=comment_info.post_id,
+            author_id=user.id,
+        )
+    )

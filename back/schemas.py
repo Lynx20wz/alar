@@ -75,7 +75,6 @@ class PostInfo(PostShortInfo):
 
 class CommentCreateInfo(BaseModel):
     content: str
-    author_id: int
     post_id: int
 
     model_config = {

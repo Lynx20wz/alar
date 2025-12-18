@@ -18,8 +18,12 @@ async def get_posts(service: post_service_deps) -> list[PostModel]:
     return await service.get_posts()
 
 
-@post_router.get('/{post_id}', response_model=PostInfo)
-async def get_post(service: post_service_deps, post_id: int, user_id: int = 0) -> PostModel:
+@post_router.get('', response_model=PostInfo)
+async def get_post(
+    service: post_service_deps,
+    post_id: Annotated[int, Query(description='The id of the post to get', alias='id')],
+    user_id: int = 0,
+) -> PostModel:
     return await service.get_post(post_id, user_id)
 
 
@@ -41,17 +45,18 @@ async def get_post_image(service: post_service_deps, post_id: int) -> Response:
 async def like_post(
     service: post_service_deps,
     user: user_deps,
-    post_id: Annotated[int, Query(description='The id of the post to like', alias='p')],
+    post_id: Annotated[int, Query(description='The id of the post to like', alias='id')],
 ) -> BaseResponse[bool]:
     current_status = await service.change_like_status(post_id, user.id)
     return BaseResponse[bool](data=current_status)
 
 
-@post_router.post('/', status_code=201, tags=['Authorized'], dependencies=[auth_deps])
+@post_router.post(
+    '/', status_code=201, tags=['Authorized'], dependencies=[auth_deps], response_model=PostInfo
+)
 async def add_post(
     service: post_service_deps,
     user: user_deps,
-    post: PostCreateInfo,
-) -> BaseResponse[int]:
-    post_id = await service.add(PostModel(**post.model_dump(), author_id=user.id))
-    return BaseResponse[int](data=post_id.id)
+    post_info: PostCreateInfo,
+) -> PostModel:
+    return await service.add(PostModel(**post_info.model_dump(), author_id=user.id))
