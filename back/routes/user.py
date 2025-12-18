@@ -41,7 +41,7 @@ async def get_user_avatar(
     service: user_service_deps,
     username: Annotated[str, Query(description='The username to get an avatar for', alias='u')],
 ) -> Response:
-    user = await service.get_user_by_username(username=username)
+    user = await service.get_user_by_username(username)
 
     if not user.avatar:
         raise ImageNotFound()

@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Generic, List, Optional, TypeVar, Union
+from typing import Generic, Optional, TypeVar, Union
 
 from fastapi import Response, UploadFile
 from pydantic import BaseModel, EmailStr, Field
@@ -20,7 +20,7 @@ class TotalInfo(BaseModel):
 
 class LikesInfo(TotalInfo):
     type: LikesType = Field(default=LikesType.users)
-    objects: List[Union['UserShortInfo', 'PostShortInfo', 'CommentInfo']] = []
+    objects: list[Union['UserShortInfo', 'PostShortInfo', 'CommentInfo']] = []
 
     model_config = {
         'from_attributes': True,
@@ -41,10 +41,10 @@ class UserInfo(UserShortInfo):
     bio: Optional[str]
     follows: LikesInfo = Field(default_factory=LikesInfo)
     followers: LikesInfo = Field(default_factory=LikesInfo)
-    posts: List['PostShortInfo'] = []
-    comments: List['CommentInfo'] = []
-    social_links: List['SocialLinkInfo'] = []
-    stacks: List['StackInfo'] = []
+    posts: list['PostShortInfo'] = []
+    comments: list['CommentInfo'] = []
+    social_links: list['SocialLinkInfo'] = []
+    stacks: list['StackInfo'] = []
 
 
 class PostCreateInfo(BaseModel):
@@ -70,7 +70,7 @@ class PostShortInfo(BaseModel):
 
 class PostInfo(PostShortInfo):
     content: str
-    comments: List['CommentInfo'] = []
+    comments: list['CommentInfo'] = []
 
 
 class CommentCreateInfo(BaseModel):
@@ -143,4 +143,5 @@ class FileResponse(Response):
             'Content-Disposition': f'attachment; filename="{filename}"',
             'Cache-Control': f'public, max-age={cache_seconds}',
         }
+
         super().__init__(content=file, media_type='image/png', headers=headers)
