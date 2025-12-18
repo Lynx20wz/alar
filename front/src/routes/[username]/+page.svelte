@@ -1,12 +1,14 @@
 <script lang="ts">
-  import { getTranslate } from "@tolgee/svelte";
   import { page } from "$app/state";
+  import { getTranslate } from "@tolgee/svelte";
   import type { PageProps } from "./$types";
 
   const user = page.data.user;
   const { data }: PageProps = $props();
   const { visited_user } = data;
   const isSelf = user?.username === visited_user?.username;
+
+  console.log(visited_user);
 
   let avatarEl: HTMLImageElement | undefined = $state(undefined);
   let bannerEl: HTMLImageElement | undefined = $state(undefined);
@@ -19,7 +21,7 @@
 
     formData.append("file", file);
     const response = await fetch(
-      `/api/users${elName}/${visited_user?.username}`,
+      `/api/users/${elName}?u=${visited_user?.username}`,
       {
         method: "POST",
         body: formData,
@@ -43,7 +45,7 @@
 {#snippet media(element: string)}
   <img
     class="banner__{element}"
-    src="/api/users/{element}/{visited_user?.username}"
+    src="/api/users/{element}?u={visited_user?.username}"
     alt={element}
   />
 {/snippet}
@@ -102,18 +104,20 @@
       </div>
       <p class="bio">{visited_user?.bio}</p>
     </div>
-    <div class="social df">
-      {#each visited_user?.social_links as social}
-        <a href={social.url} target="_blank" class="social__link">
-          <img
-            src={`https://favicon.is/${
-              new URL(social.url).hostname
-            }?larger=true`}
-            alt={social.platform}
-          />
-        </a>
-      {/each}
-    </div>
+    {#if visited_user?.social_links.length}
+      <div class="social df">
+        {#each visited_user?.social_links as social}
+          <a href={social.url} target="_blank" class="social__link">
+            <img
+              src={`https://favicon.is/${
+                new URL(social.url).hostname
+              }?larger=true`}
+              alt={social.platform}
+            />
+          </a>
+        {/each}
+      </div>
+    {/if}
   </div>
   <div class="container"></div>
 </main>

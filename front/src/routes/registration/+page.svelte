@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { getTranslate } from "@tolgee/svelte";
   import Alert from "$lib/components/Alert.svelte";
+  import { getTranslate } from "@tolgee/svelte";
 
   let continueRegistration = $state(false);
   let userExist = $state(false);
@@ -14,7 +14,7 @@
 
     if (!continueRegistration) {
       const response = await fetch(
-        `/api/auth/exists?username=${formData.get("username")}`,
+        `/api/auth/exists?u=${formData.get("username")}`,
         { method: "GET" }
       );
 
@@ -67,8 +67,6 @@
     block!.style.backgroundColor = "transparent";
     block!.classList.remove("upload");
   }
-
-  async function checkUsername() {}
 </script>
 
 <Alert bind:this={alert} type="error" message="User already exist" />

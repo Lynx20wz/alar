@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { getTranslate } from "@tolgee/svelte";
   import { page } from "$app/state";
-  import Post from "$lib/components/Post.svelte";
   import Aside from "$lib/components/Aside.svelte";
+  import Post from "$lib/components/Post.svelte";
+  import { getTranslate } from "@tolgee/svelte";
 
   const { t } = getTranslate();
   const posts = page.data.posts;

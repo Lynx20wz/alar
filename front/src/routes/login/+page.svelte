@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { getTranslate } from "@tolgee/svelte";
   import Alert from "$lib/components/Alert.svelte";
+  import { getTranslate } from "@tolgee/svelte";
 
   let alert: Alert;
   const { t } = getTranslate();
@@ -15,11 +15,12 @@
     });
 
     const json = await response.json();
-    if (json.success) {
-      window.location.href = "/";
-    } else {
-      alert.show(json.msg);
+    if (!response.ok) {
+      alert.show(json.detail);
+      return;
     }
+
+    window.location.href = "/";
   }
 </script>
 

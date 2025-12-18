@@ -4,16 +4,13 @@ import type { PageLoad } from "./$types";
 export const load: PageLoad = async ({ fetch, params }) => {
   const username = params.username;
 
-  let visited_user: UserInfo | undefined = undefined;
   try {
-    const response = await fetch(`/api/users/${username}`);
+    const response = await fetch(`/api/users?u=${username}`);
     const json = await response.json();
-    if (json.success) {
-      visited_user = json.user as UserInfo;
-    }
-  } catch (error) {
-    console.error(error);
-  }
 
-  return { visited_user };
+    if (!response.ok) alert(json.detail)
+    return { visited_user: json.data as UserInfo }
+  } catch (error) {
+    console.error(error)
+  };
 };

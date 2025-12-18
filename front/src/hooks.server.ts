@@ -1,6 +1,6 @@
-import { redirect } from "@sveltejs/kit";
-import { isPublicRoute } from "$lib/utils";
 import type { UserInfo } from "$lib/types/User";
+import { isPublicRoute } from "$lib/utils";
+import { redirect } from "@sveltejs/kit";
 
 export const handle = async ({ event, resolve }) => {
   if (isPublicRoute(event.url.pathname)) {
@@ -28,8 +28,7 @@ export const handle = async ({ event, resolve }) => {
     }
     const json = await response.json();
 
-    console.log(json);
-    userDB = json.user as UserInfo;
+    userDB = json.data as UserInfo;
   } catch (error) {
     console.log(error);
     console.error("Failed to fetch user:", error);
