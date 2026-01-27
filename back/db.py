@@ -1,5 +1,6 @@
-__all__ = ('engine', 'sm', 'Base')
+__all__ = ('sm', 'Base')
 
+from pathlib import Path
 from typing import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import (
@@ -11,17 +12,24 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from config import config
 
-engine = create_async_engine(
-    url=f'sqlite+aiosqlite:///{config.DB_PATH}',
-    echo=False,
-)
-
-sm = async_sessionmaker(engine, expire_on_commit=False)
+sm: async_sessionmaker
 
 
-async def create_tables():
+async def db_init():
+    db_path = Path(config.DB_PATH)
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    db_path.touch()
+
+    engine = create_async_engine(
+        url=f'sqlite+aiosqlite:///{db_path}',
+        echo=False,
+    )
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+    global sm
+    sm = async_sessionmaker(engine, expire_on_commit=False)
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:

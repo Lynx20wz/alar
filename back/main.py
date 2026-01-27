@@ -4,13 +4,13 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from db import create_tables
+from db import db_init
 from routes import *
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-    await create_tables()
+async def lifespan(_: FastAPI):
+    await db_init()
     yield
 
 
