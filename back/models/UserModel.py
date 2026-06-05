@@ -1,3 +1,5 @@
+# pyright: reportUndefinedVariable=false
+
 from passlib.hash import sha256_crypt
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -18,22 +20,22 @@ class UserModel(Base):
     avatar: Mapped[bytes] = mapped_column()
     bio: Mapped[str | None] = mapped_column(String(100))
 
-    posts: Mapped[list['PostModel']] = relationship(back_populates='author')
+    posts: Mapped[list['PostModel']] = relationship(back_populates='author', default_factory=list)
     comments: Mapped[list['CommentModel']] = relationship(back_populates='author')
     social_links: Mapped[list['SocialLinkModel']] = relationship(
-        back_populates='user', cascade='all, delete-orphan'
+        back_populates='user', cascade='all, delete-orphan', default_factory=list
     )
     stacks: Mapped[list['StackModel']] = relationship(
-        back_populates='user', cascade='all, delete-orphan'
+        back_populates='user', cascade='all, delete-orphan', default_factory=list
     )
     like_users_relations: Mapped[list['LikeUserModel']] = relationship(
-        back_populates='user', foreign_keys='LikeUserModel.user_id'
+        back_populates='user', foreign_keys='LikeUserModel.user_id', default_factory=list
     )  # who was liked by this user
     like_by_users_relations: Mapped[list['LikeUserModel']] = relationship(
-        back_populates='like_user', foreign_keys='LikeUserModel.like_user_id'
+        back_populates='like_user', foreign_keys='LikeUserModel.like_user_id', default_factory=list
     )  # who liked this user
     like_posts_relations: Mapped[list['LikePostModel']] = relationship(
-        back_populates='user', foreign_keys='LikePostModel.user_id'
+        back_populates='user', foreign_keys='LikePostModel.user_id', default_factory=list
     )  # what posts were liked by this user
 
     @property
