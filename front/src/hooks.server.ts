@@ -17,7 +17,7 @@ export const handle = async ({ event, resolve }) => {
   let userDB;
 
   try {
-    const response = await event.fetch(`http://localhost:8000/users/`, {
+    const response = await event.fetch(`http://localhost:8000/v1/users/`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

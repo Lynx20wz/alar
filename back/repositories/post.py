@@ -1,6 +1,6 @@
-from typing import Optional
+from typing import override
 
-from sqlalchemy import select, delete
+from sqlalchemy import delete, select
 from sqlalchemy.orm import joinedload, selectinload
 
 from models import LikePostModel, PostModel
@@ -9,9 +9,10 @@ from .base import BaseRepository
 
 
 class PostRepository(BaseRepository[PostModel]):
-    model = PostModel
+    model: type[PostModel] = PostModel
 
-    async def get(self, id: int) -> Optional[PostModel]:
+    @override
+    async def get(self, id: int) -> PostModel | None:
         return await self.session.scalar(
             select(PostModel)
             .where(PostModel.id == id)
@@ -27,7 +28,7 @@ class PostRepository(BaseRepository[PostModel]):
         await self.session.commit()
 
     async def delete_like(self, like: LikePostModel):
-        await self.session.execute(
+        _ = await self.session.execute(
             delete(LikePostModel).where(
                 LikePostModel.post_id == like.post_id, LikePostModel.user_id == like.user_id
             )

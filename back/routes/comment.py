@@ -5,7 +5,7 @@ from fastapi import APIRouter, Query
 from deps import auth_deps, comment_service_deps, user_deps
 from exceptions import CommentNotFound
 from models import CommentModel
-from schemas import BaseResponse, CommentCreateInfo, CommentInfo
+from schemas import CommentCreateInfo, CommentInfo
 
 comment_router = APIRouter(
     prefix='/comments',

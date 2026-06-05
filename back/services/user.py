@@ -74,14 +74,14 @@ class UserService(BaseService[UserRepository, UserModel]):
 
     async def add_user(self, data: UserRegisterData) -> UserModel:
         try:
-            await self.get_user_by_username(data.username)
+            _ = await self.get_user_by_username(data.username)
         except UserNotFound:
             user_model = UserModel(
                 username=data.username,
                 email=data.email,
                 password=data.password,
-                banner=data.banner.read() if data.banner else None,
-                avatar=data.avatar.read() if data.avatar else None,
+                banner=await data.banner.read() if data.banner else None,
+                avatar=await data.avatar.read() if data.avatar else None,
             )
 
             return await self.repository.add(user_model)

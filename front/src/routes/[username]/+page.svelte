@@ -20,13 +20,10 @@
     const file = targetEl.files![0];
 
     formData.append("file", file);
-    const response = await fetch(
-      `/api/users/${elName}?u=${visited_user?.username}`,
-      {
-        method: "POST",
-        body: formData,
-      }
-    );
+    const response = await fetch(`/api/users/${elName}?u=${visited_user?.username}`, {
+      method: "PATCH",
+      body: formData,
+    });
 
     if (response.ok && avatarEl && elName === "avatar") {
       avatarEl.src = `/api/users${elName}/${visited_user?.username}`;
@@ -109,9 +106,7 @@
         {#each visited_user?.social_links as social}
           <a href={social.url} target="_blank" class="social__link">
             <img
-              src={`https://favicon.is/${
-                new URL(social.url).hostname
-              }?larger=true`}
+              src={`https://favicon.is/${new URL(social.url).hostname}?larger=true`}
               alt={social.platform}
             />
           </a>

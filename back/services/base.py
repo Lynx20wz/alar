@@ -1,4 +1,5 @@
-from typing import Generic, Optional, TypeVar
+from abc import ABC
+from typing import Any, Generic, TypeVar
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -6,16 +7,16 @@ from db import Base
 from exceptions import NotFoundError
 from repositories import BaseRepository
 
-RepositoryType = TypeVar('RepositoryType', bound=BaseRepository)
+RepositoryType = TypeVar('RepositoryType', bound=BaseRepository[Any])
 ModelType = TypeVar('ModelType', bound=Base)
 
 
-class BaseService(Generic[RepositoryType, ModelType]):
+class BaseService(ABC, Generic[RepositoryType, ModelType]):
     repo: type[RepositoryType]
 
     def __init__(self, session: AsyncSession):
-        self.session = session
-        self.repository = self.repo(session)
+        self.session: AsyncSession = session
+        self.repository: RepositoryType = self.repo(session)
 
     async def _get_or_raise(self, obj: ModelType | None) -> ModelType:
         if not obj:
@@ -25,19 +26,19 @@ class BaseService(Generic[RepositoryType, ModelType]):
     async def add(self, obj: ModelType) -> ModelType:
         return await self.repository.add(obj)
 
-    async def get(self, obj_id: int) -> Optional[ModelType]:
+    async def get(self, obj_id: int) -> ModelType | None:
         return await self.repository.get(obj_id)
 
-    async def get_by(self, **kwargs) -> Optional[ModelType]:
+    async def get_by(self, **kwargs) -> ModelType | None:
         return await self.repository.get_by(**kwargs)
 
-    async def get_by_model(self, model: ModelType) -> Optional[ModelType]:
+    async def get_by_model(self, model: ModelType) -> ModelType | None:
         return await self.repository.get_by_model(model)
 
-    async def get_all(self, offset: int = 0) -> list[Optional[ModelType]]:
+    async def get_all(self, offset: int = 0) -> list[ModelType | None]:
         return await self.repository.get_all(offset)
 
-    async def update(self, obj_id: int, **fields) -> None:
+    async def update(self, obj_id: int, **fields: Any) -> None:
         obj = await self.get(obj_id)
 
         if not obj:
@@ -47,5 +48,5 @@ class BaseService(Generic[RepositoryType, ModelType]):
 
         return await self.repository.update(obj, **fields)
 
-    async def delete(self, obj: type[ModelType]) -> None:
+    async def delete(self, obj: ModelType) -> None:
         return await self.repository.delete(obj)

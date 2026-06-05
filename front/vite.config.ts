@@ -1,15 +1,16 @@
 import { sveltekit } from "@sveltejs/kit/vite";
 import { defineConfig } from "vite";
-import devtoolsJson from 'vite-plugin-devtools-json';
+import devtoolsJson from "vite-plugin-devtools-json";
 
 export default defineConfig({
   plugins: [sveltekit(), devtoolsJson()],
   server: {
     allowedHosts: true,
+    host: "0.0.0.0",
     port: 5050,
     proxy: {
       "/api": {
-        target: "http://localhost:8000",
+        target: "http://localhost:8000/v1",
         rewrite: (path) => path.replace(/^\/api/, ""),
         changeOrigin: true,
       },

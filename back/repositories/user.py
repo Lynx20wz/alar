@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, override
 
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -9,8 +9,8 @@ from .base import BaseRepository
 
 
 class UserRepository(BaseRepository[UserModel]):
-    model = UserModel
-    options = [
+    model: type[UserModel] = UserModel
+    options: list[Any] = [
         selectinload(UserModel.stacks),
         selectinload(UserModel.social_links),
         selectinload(UserModel.posts).joinedload(PostModel.comments),
@@ -20,12 +20,14 @@ class UserRepository(BaseRepository[UserModel]):
         selectinload(UserModel.like_posts_relations).joinedload(LikePostModel.post),
     ]
 
-    async def get(self, id: int) -> Optional[UserModel]:
+    @override
+    async def get(self, id: int) -> UserModel | None:
         return await self.session.scalar(
             select(UserModel).where(UserModel.id == id).options(*self.options)
         )
 
-    async def get_by(self, **kwargs) -> Optional[UserModel]:
+    @override
+    async def get_by(self, **kwargs: Any) -> UserModel | None:
         filters = [getattr(self.model, key) == value for key, value in kwargs.items()]
 
         if filters:

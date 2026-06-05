@@ -16,7 +16,7 @@ from .user import user_router
 
 all_routers = (post_router, auth_router, user_router, comment_router)
 
-v1_router = APIRouter(prefix='/v1')
+v1_router = APIRouter(prefix='/v1', tags=['v1'])
 
 for router in all_routers:
     v1_router.include_router(router)

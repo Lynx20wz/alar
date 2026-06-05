@@ -13,7 +13,7 @@ auth_router = APIRouter(
 )
 
 
-async def set_auth_cookies(response, user: UserModel):
+async def set_auth_cookies(response: Response, user: UserModel):
     response.set_cookie(
         key='token',
         value=jwt_generator.generate_access_token(user.id),
@@ -41,7 +41,7 @@ async def set_auth_cookies(response, user: UserModel):
 async def login(
     response: Response,
     service: user_service_deps,
-    data: UserLoginData = Form(),
+    data: Annotated[UserLoginData, Form()],
 ) -> BaseResponse[UserInfo]:
     user = await service.login(data.username, data.password)
 
@@ -53,7 +53,7 @@ async def login(
 async def register(
     response: Response,
     service: user_service_deps,
-    data: UserRegisterData = Form(),
+    data: Annotated[UserRegisterData, Form()],
 ) -> BaseResponse[UserInfo]:
     user = await service.add_user(data)
 

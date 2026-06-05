@@ -2,7 +2,6 @@ from typing import Annotated
 
 from fastapi import (
     APIRouter,
-    File,
     Query,
     Response,
     UploadFile,
@@ -56,8 +55,8 @@ async def get_user_avatar(
     responses={404: {'description': 'User not found'}},
 )
 async def set_user_avatar(
-    service: user_service_deps, user: user_deps, file: UploadFile = File(...)
-) -> BaseResponse:
+    service: user_service_deps, user: user_deps, file: UploadFile
+) -> BaseResponse[None]:
     await service.update(user.id, avatar=await file.read())
     return BaseResponse()
 
@@ -82,7 +81,7 @@ async def get_user_banner(
     responses={404: {'description': 'User not found'}},
 )
 async def set_user_banner(
-    service: user_service_deps, user: user_deps, file: UploadFile = File(...)
-) -> BaseResponse:
+    service: user_service_deps, user: user_deps, file: UploadFile
+) -> BaseResponse[None]:
     await service.update(user.id, banner=await file.read())
     return BaseResponse()

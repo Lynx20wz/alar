@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from exceptions import CommentNotFound
+from exceptions import CommentNotFound, PostNotFound
 from models import CommentModel
 from repositories import CommentRepository
 
@@ -13,7 +13,7 @@ class CommentService(BaseService[CommentRepository, CommentModel]):
 
     def __init__(self, session: AsyncSession):
         super().__init__(session)
-        self.post_service = PostService(session)
+        self.post_service: PostService = PostService(session)
 
     def _get_comment_or_raise(self, comment: CommentModel | None) -> CommentModel:
         if not comment:
@@ -25,5 +25,7 @@ class CommentService(BaseService[CommentRepository, CommentModel]):
         return self._get_comment_or_raise(await self.repository.get(comment_id))
 
     async def add_comment(self, comment: CommentModel) -> CommentModel:
-        await self.post_service.get_post(comment.post_id)  # check if post exists
+        post = await self.post_service.get_post(comment.post_id)  # check if post exists
+        if not post:
+            raise PostNotFound()
         return self._get_comment_or_raise(await self.repository.add(comment))

@@ -1,7 +1,7 @@
 __all__ = ('sm', 'Base')
 
+from collections.abc import AsyncGenerator
 from pathlib import Path
-from typing import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -12,7 +12,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from config import config
 
-sm: async_sessionmaker
+sm: async_sessionmaker[AsyncSession]
 
 
 async def db_init():

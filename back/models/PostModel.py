@@ -1,7 +1,6 @@
 # pyright: reportUndefinedVariable=false
 
 from datetime import datetime
-from typing import Optional
 
 from sqlalchemy import DateTime, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -16,8 +15,8 @@ class PostModel(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     author_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
     title: Mapped[str] = mapped_column(unique=True)
-    content: Mapped[str]
-    image: Mapped[Optional[bytes]]
+    content: Mapped[str] = mapped_column()
+    image: Mapped[bytes | None] = mapped_column()
     views: Mapped[int] = mapped_column(server_default='0')
     created_at: Mapped[datetime] = mapped_column(DateTime(), server_default=func.now())
 

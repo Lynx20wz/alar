@@ -1,10 +1,6 @@
-# pyright: reportUndefinedVariable=false
-
-from typing import Optional
-
-from passlib.hash import bcrypt
+from passlib.hash import sha256_crypt
 from sqlalchemy import String
-from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from db import Base
 
@@ -18,9 +14,9 @@ class UserModel(Base):
     # EXTRA
     email: Mapped[str] = mapped_column(unique=True)
     _password: Mapped[str] = mapped_column('password')
-    banner: Mapped[Optional[bytes]]
-    avatar: Mapped[Optional[bytes]]
-    bio: Mapped[Optional[str]] = mapped_column(String(100))
+    banner: Mapped[bytes] = mapped_column()
+    avatar: Mapped[bytes] = mapped_column()
+    bio: Mapped[str | None] = mapped_column(String(100))
 
     posts: Mapped[list['PostModel']] = relationship(back_populates='author')
     comments: Mapped[list['CommentModel']] = relationship(back_populates='author')
@@ -40,17 +36,13 @@ class UserModel(Base):
         back_populates='user', foreign_keys='LikePostModel.user_id'
     )  # what posts were liked by this user
 
-    @validates('username')
-    def convert_lower(self, key, value):
-        return value
-
     @property
     def password(self):
         raise AttributeError('Password is not readable')
 
     @password.setter
     def password(self, password: str):
-        self._password = bcrypt.hash(password)
+        self._password = sha256_crypt.hash(password)
 
     def check_password(self, plain_password: str) -> bool:
-        return bcrypt.verify(plain_password, self._password)
+        return sha256_crypt.verify(plain_password, self._password)

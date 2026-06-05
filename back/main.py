@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from db import db_init
-from routes import *
+from routes import v1_router
 
 
 @asynccontextmanager
@@ -24,8 +24,7 @@ app.add_middleware(
     allow_headers=['*'],
 )
 
-for router in all_routers:
-    app.include_router(router)
+app.include_router(v1_router)
 
 if __name__ == '__main__':
     from uvicorn import Config, Server

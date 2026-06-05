@@ -1,7 +1,7 @@
 __all__ = ('jwt_generator', 'JWTBearer')
 
 import datetime
-from typing import Optional
+from typing import Any, override
 
 from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPBearer
@@ -18,7 +18,7 @@ class JWTGenerator:
         self,
         *,
         subject: str,
-        jwt_data: Optional[dict[str, str]] = None,
+        jwt_data: dict[str, str] | None = None,
         expires_delta: datetime.timedelta | None = None,
     ) -> str:
         if expires_delta:
@@ -38,7 +38,7 @@ class JWTGenerator:
             expires_delta=datetime.timedelta(minutes=config.JWT_ACCESS_TOKEN_EXPIRATION_TIME),
         )
 
-    def decode_jwt(self, token: str) -> dict | None:
+    def decode_jwt(self, token: str) -> dict[str, Any] | None:
         try:
             decoded_token = jose_jwt.decode(
                 token, config.JWT_SECRET, algorithms=[config.JWT_ALGORITHM]
@@ -66,8 +66,11 @@ class JWTBearer(HTTPBearer):
             return cookie_auth
         return None
 
-    async def __call__(self, request: Request, service=Depends(ServiceFactory(UserService))):
-        await super(JWTBearer, self).__call__(request)
+    @override
+    async def __call__(
+        self, request: Request, service: UserService = Depends(ServiceFactory(UserService))
+    ):
+        _ = await super(JWTBearer, self).__call__(request)
 
         token = await self._get_token(request)
 

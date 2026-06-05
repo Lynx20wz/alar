@@ -1,7 +1,7 @@
 from abc import ABC
-from typing import Any, Generic, Optional, TypeVar
+from typing import Any, Generic, TypeVar
 
-from sqlalchemy import select, update, delete
+from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db import Base
@@ -13,7 +13,7 @@ class BaseRepository(ABC, Generic[ModelType]):
     model: type[ModelType]
 
     def __init__(self, session: AsyncSession):
-        self.session = session
+        self.session: AsyncSession = session
 
     async def add(self, obj: ModelType) -> ModelType:
         self.session.add(obj)
@@ -21,16 +21,16 @@ class BaseRepository(ABC, Generic[ModelType]):
         await self.session.refresh(obj)
         return obj
 
-    async def get(self, id: int) -> Optional[ModelType]:
+    async def get(self, id: int) -> ModelType | None:
         return await self.session.scalar(select(self.model).where(self.model.id == id))
 
-    async def get_by(self, **kwargs) -> Optional[ModelType]:
+    async def get_by(self, **kwargs: dict[str, Any]) -> ModelType | None:
         filters = [getattr(self.model, key) == value for key, value in kwargs.items()]
 
         if filters:
             return await self.session.scalar(select(self.model).where(*filters))
 
-    async def get_by_model(self, model: ModelType) -> Optional[ModelType]:
+    async def get_by_model(self, model: ModelType) -> ModelType | None:
         filters = [getattr(self.model, key) == value for key, value in model.__dict__.items()]
 
         if filters:
@@ -48,9 +48,9 @@ class BaseRepository(ABC, Generic[ModelType]):
             .execution_options(synchronize_session='fetch')
         )
 
-        await self.session.execute(stmt)
+        _ = await self.session.execute(stmt)
         await self.session.commit()
 
     async def delete(self, obj: ModelType) -> None:
-        await self.session.execute(delete(self.model).where(self.model.id == obj.id))
+        _ = await self.session.execute(delete(self.model).where(self.model.id == obj.id))
         await self.session.commit()

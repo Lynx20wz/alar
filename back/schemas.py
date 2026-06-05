@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Generic, Optional, TypeVar, Union
+from typing import Generic, TypeVar
 
 from fastapi import Response, UploadFile
 from pydantic import BaseModel, EmailStr, Field
@@ -20,7 +20,7 @@ class TotalInfo(BaseModel):
 
 class LikesInfo(TotalInfo):
     type: LikesType = Field(default=LikesType.users)
-    objects: list[Union['UserShortInfo', 'PostShortInfo', 'CommentInfo']] = []
+    objects: list['UserShortInfo | PostShortInfo | CommentInfo'] = []
 
     model_config = {
         'from_attributes': True,
@@ -38,7 +38,7 @@ class UserShortInfo(BaseModel):
 
 class UserInfo(UserShortInfo):
     email: EmailStr
-    bio: Optional[str]
+    bio: str | None
     follows: LikesInfo = Field(default_factory=LikesInfo)
     followers: LikesInfo = Field(default_factory=LikesInfo)
     posts: list['PostShortInfo'] = []
@@ -50,7 +50,7 @@ class UserInfo(UserShortInfo):
 class PostCreateInfo(BaseModel):
     title: str = Field(..., min_length=1, max_length=100)
     content: str
-    image: Optional[UploadFile] = None
+    image: UploadFile | None = None
 
 
 class PostShortInfo(BaseModel):
@@ -107,7 +107,7 @@ class StackInfo(BaseModel):
     id: int
     user_id: int
     title: str
-    icon: Optional[bytes] = None
+    icon: bytes | None = None
     url: str
 
     model_config = {
@@ -123,13 +123,13 @@ class UserLoginData(BaseModel):
 
 class UserRegisterData(UserLoginData):
     email: EmailStr
-    avatar: Optional[UploadFile] = None
-    banner: Optional[UploadFile] = None
+    avatar: UploadFile | None = None
+    banner: UploadFile | None = None
 
 
 # Responses
 class BaseResponse(BaseModel, Generic[T]):
-    data: Optional[T] = None
+    data: T | None = None
 
 
 class UserExistsResponse(BaseModel):
