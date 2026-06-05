@@ -9,19 +9,17 @@ from .base import BaseService
 class UserService(BaseService[UserRepository, UserModel]):
     repo = UserRepository
 
-    def _get_user_or_raise(self, user: UserModel | None) -> UserModel:
-        if not user:
-            raise UserNotFound()
-        return user
+    async def get_user_by_id(self, user_id: int) -> UserModel | None:
+        return await self.repository.get(user_id)
 
-    async def get_user_by_id(self, user_id: int) -> UserModel:
-        return self._get_user_or_raise(await self.repository.get(user_id))
-
-    async def get_user_by_username(self, username: str) -> UserModel:
-        return self._get_user_or_raise(await self.repository.get_by(username=username))
+    async def get_user_by_username(self, username: str) -> UserModel | None:
+        return await self.repository.get_by(username=username)
 
     async def login(self, username: str, password: str) -> UserModel:
-        user = self._get_user_or_raise(await self.get_user_by_username(username))
+        user = await self.get_user_by_username(username)
+
+        if user is None:
+            raise UserNotFound()
 
         if not user.check_password(password):
             raise NotCorrectPassword()
@@ -29,7 +27,10 @@ class UserService(BaseService[UserRepository, UserModel]):
         return user
 
     async def get_follows(self, user_id: int) -> LikesInfo:
-        user = self._get_user_or_raise(await self.get_user_by_id(user_id))
+        user = await self.get_user_by_id(user_id)
+
+        if user is None:
+            raise UserNotFound(object_id=user_id)
 
         return LikesInfo(
             type=LikesType.users,
@@ -38,7 +39,10 @@ class UserService(BaseService[UserRepository, UserModel]):
         )
 
     async def get_followers(self, user_id: int) -> LikesInfo:
-        user = self._get_user_or_raise(await self.get_user_by_id(user_id))
+        user = await self.get_user_by_id(user_id)
+
+        if user is None:
+            raise UserNotFound(object_id=user_id)
 
         return LikesInfo(
             type=LikesType.users,
@@ -47,7 +51,10 @@ class UserService(BaseService[UserRepository, UserModel]):
         )
 
     async def get_liked_posts(self, user_id: int) -> LikesInfo:
-        user = self._get_user_or_raise(await self.get_user_by_id(user_id))
+        user = await self.get_user_by_id(user_id)
+
+        if user is None:
+            raise UserNotFound(object_id=user_id)
 
         return LikesInfo(
             type=LikesType.posts,
@@ -66,24 +73,19 @@ class UserService(BaseService[UserRepository, UserModel]):
         Returns:
             bool: True if user exists
         """
-        try:
-            user = await self.get_user_by_username(username)
-            return user.username.lower() == username.lower()
-        except UserNotFound:
-            return False
+        return await self.get_user_by_username(username) is not None
 
     async def add_user(self, data: UserRegisterData) -> UserModel:
-        try:
-            _ = await self.get_user_by_username(data.username)
-        except UserNotFound:
-            user_model = UserModel(
-                username=data.username,
-                email=data.email,
-                password=data.password,
-                banner=await data.banner.read() if data.banner else None,
-                avatar=await data.avatar.read() if data.avatar else None,
-            )
+        user = await self.get_user_by_username(data.username)
 
-            return await self.repository.add(user_model)
-        else:
-            raise UserAlreadyExists()
+        if user:
+            raise UserAlreadyExists(object_id=user.id)
+
+        user_model = UserModel(
+            username=data.username,
+            email=data.email,
+            password=data.password,
+            banner=await data.banner.read() if data.banner else None,
+            avatar=await data.avatar.read() if data.avatar else None,
+        )
+        return await self.repository.add(user_model)

@@ -8,13 +8,11 @@ from .base import BaseService
 class PostService(BaseService[PostRepository, PostModel]):
     repo = PostRepository
 
-    def _get_post_or_raise(self, post: PostModel | None) -> PostModel:
-        if not post:
-            raise PostNotFound()
-        return post
+    async def get_post(self, post_id: int, user_id: int | None = None) -> PostModel | None:
+        post = await self.repository.get(post_id)
 
-    async def get_post(self, post_id: int, user_id: int = 0) -> PostModel:
-        post = self._get_post_or_raise(await self.repository.get(post_id))
+        if not post:
+            return None
 
         if user_id:
             post.is_liked = await self.is_liked_by(post, user_id)
@@ -34,7 +32,10 @@ class PostService(BaseService[PostRepository, PostModel]):
         Returns:
             bool: the new status
         """
-        post = self._get_post_or_raise(await self.get_post(post_id))
+        post = await self.get_post(post_id)
+
+        if not post:
+            raise PostNotFound(object_id=post_id)
 
         like = LikePostModel(post_id=post_id, user_id=user_id)
 

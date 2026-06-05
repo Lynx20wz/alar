@@ -15,17 +15,13 @@ class CommentService(BaseService[CommentRepository, CommentModel]):
         super().__init__(session)
         self.post_service: PostService = PostService(session)
 
-    def _get_comment_or_raise(self, comment: CommentModel | None) -> CommentModel:
-        if not comment:
-            raise CommentNotFound()
-
-        return comment
-
-    async def get_comment(self, comment_id: int) -> CommentModel:
-        return self._get_comment_or_raise(await self.repository.get(comment_id))
+    async def get_comment(self, comment_id: int) -> CommentModel | None:
+        return await self.repository.get(comment_id)
 
     async def add_comment(self, comment: CommentModel) -> CommentModel:
         post = await self.post_service.get_post(comment.post_id)  # check if post exists
+
         if not post:
-            raise PostNotFound()
-        return self._get_comment_or_raise(await self.repository.add(comment))
+            raise PostNotFound(object_id=comment.post_id)
+
+        return await self.repository.add(comment)
