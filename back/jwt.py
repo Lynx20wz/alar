@@ -1,15 +1,15 @@
 __all__ = ('jwt_generator', 'JWTBearer')
 
 import datetime
-from typing import Any, override
+from typing import Annotated, Any
 
 from fastapi import Depends, HTTPException, Request
-from fastapi.security import HTTPBearer
 from jose import JWTError
 from jose import jwt as jose_jwt
 
 from config import config
 from deps import ServiceFactory
+from models import UserModel
 from services import UserService
 
 
@@ -23,7 +23,6 @@ class JWTGenerator:
     ) -> str:
         if expires_delta:
             expire = datetime.datetime.now(datetime.timezone.utc) + expires_delta
-
         else:
             expire = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
                 minutes=config.JWT_MIN
@@ -43,51 +42,59 @@ class JWTGenerator:
             decoded_token = jose_jwt.decode(
                 token, config.JWT_SECRET, algorithms=[config.JWT_ALGORITHM]
             )
-            return (
-                decoded_token
-                if decoded_token['exp'] >= datetime.datetime.now(datetime.timezone.utc).timestamp()
-                else None
-            )
+            return decoded_token
         except JWTError:
-            return {}
+            return None
 
 
 jwt_generator = JWTGenerator()
 
 
-class JWTBearer(HTTPBearer):
-    def __init__(self, auto_error: bool = False):
-        super(JWTBearer, self).__init__(auto_error=auto_error)
+class JWTBearer:
+    def __init__(self, auto_error: bool = True):
+        self.auto_error = auto_error
 
-    async def _get_token(self, request: Request) -> str | None:
-        if header_auth := request.headers.get('Authorization'):
-            return header_auth.split(' ')[1]
-        elif cookie_auth := request.cookies.get('token'):
-            return cookie_auth
-        return None
-
-    @override
     async def __call__(
-        self, request: Request, service: UserService = Depends(ServiceFactory(UserService))
-    ):
-        _ = await super(JWTBearer, self).__call__(request)
-
+        self,
+        request: Request,
+        service: Annotated[UserService, Depends(ServiceFactory(UserService))],
+    ) -> UserModel | None:
         token = await self._get_token(request)
 
         if not token:
-            raise HTTPException(status_code=401, detail='Not authenticated.')
+            if self.auto_error:
+                raise HTTPException(status_code=401, detail='Not authenticated.')
+            return None
 
         jwt_data = jwt_generator.decode_jwt(token)
 
-        if not jwt_data:
-            raise HTTPException(status_code=401, detail='Invalid token or expired token.')
+        if jwt_data is None:
+            if self.auto_error:
+                raise HTTPException(status_code=401, detail='Invalid token or expired token.')
+            return None
 
-        user = await service.get_user_by_id(int(jwt_data['sub']))
+        try:
+            user_id = int(jwt_data['sub'])
+        except (KeyError, ValueError):
+            if self.auto_error:
+                raise HTTPException(status_code=401, detail='Invalid token format.')
+            return None
+
+        user = await service.get_user_by_id(user_id)
 
         if not user:
-            raise HTTPException(status_code=401, detail='User not found.')
+            if self.auto_error:
+                raise HTTPException(status_code=401, detail='User not found.')
+            return None
 
-        if user.username != request.cookies.get('username'):
-            raise HTTPException(status_code=401, detail='Invalid credentials.')
+        return user
 
-        request.state.user = user
+    async def _get_token(self, request: Request) -> str | None:
+        if header_auth := request.headers.get('Authorization'):
+            try:
+                return header_auth.split(' ')[1]
+            except IndexError:
+                return None
+        elif cookie_auth := request.cookies.get('token'):
+            return cookie_auth
+        return None

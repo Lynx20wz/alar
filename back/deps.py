@@ -40,15 +40,8 @@ user_service_deps = Annotated[UserService, Depends(user_service_factory)]
 post_service_deps = Annotated[PostService, Depends(post_service_factory)]
 comment_service_deps = Annotated[CommentService, Depends(comment_service_factory)]
 
-
-async def user_factory(request: Request) -> UserModel:
-    return request.state.user
-
-
-user_deps = Annotated[UserModel, Depends(user_factory)]
-
 # avoid circular import
 from jwt import JWTBearer
 
 jwt_factory = JWTBearer()
-auth_deps: Any = Depends(jwt_factory)
+user_deps = Annotated[UserModel, Depends(jwt_factory)]
