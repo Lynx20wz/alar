@@ -20,7 +20,13 @@ class NotFoundError(AppException):
 
 class UserNotFound(NotFoundError):
     object_id: int | None = None
+    username: str | None = None
     detail: str = 'User not found'
+
+    def __init__(self, username: str | None = None, object_id: int | None = None):
+        self.username = username
+        self.object_id = object_id
+        super().__init__(detail=self.detail, object_id=self.object_id)
 
 
 class PostNotFound(NotFoundError):

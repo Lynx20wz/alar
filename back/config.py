@@ -22,10 +22,10 @@ class Config(BaseSettings):
     )
 
 
-config = Config()  # type: ignore
+config = Config()  # pyright: ignore[reportCallIssue]
 
 logger.remove()
-logger.add(
+_ = logger.add(
     sink=sys.stdout,
     level='DEBUG',
     format='{time:H:mm:ss} | "{function}" | {line} ({module}) | <level>{level}</level> | {message}',

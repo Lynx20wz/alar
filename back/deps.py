@@ -43,5 +43,5 @@ comment_service_deps = Annotated[CommentService, Depends(comment_service_factory
 # avoid circular import
 from jwt import JWTBearer
 
-jwt_factory = JWTBearer()
-user_deps = Annotated[UserModel, Depends(jwt_factory)]
+user_deps = Annotated[UserModel, Depends(JWTBearer())]
+optional_user_deps = Annotated[UserModel | None, Depends(JWTBearer(auto_error=False))]
