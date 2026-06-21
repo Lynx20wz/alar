@@ -41,24 +41,24 @@ async def set_auth_cookies(response: Response, user: UserModel):
 async def login(
     response: Response,
     service: user_service_deps,
-    data: Annotated[UserLoginData, Form()],
-) -> BaseResponse[UserInfo]:
+    data: Annotated[UserLoginSchema, Form()],
+) -> UserShortReadSchema:
     user = await service.login(data.username, data.password)
 
     await set_auth_cookies(response, user)
-    return BaseResponse(data=UserInfo.model_validate(user))
+    return UserShortReadSchema.model_validate(user)
 
 
-@auth_router.post('/user', status_code=201, responses={409: {'description': 'User already exists'}})
+@auth_router.post('/', status_code=201, responses={409: {'description': 'User already exists'}})
 async def register(
     response: Response,
     service: user_service_deps,
-    data: Annotated[UserRegisterData, Form()],
-) -> BaseResponse[UserInfo]:
-    user = await service.add_user(data)
+    data: Annotated[UserRegisterSchema, Form()],
+) -> UserShortReadSchema:
+    user = await service.add(data)
 
     await set_auth_cookies(response, UserModel(id=user.id, username=user.username))
-    return BaseResponse(data=UserInfo.model_validate(user))
+    return UserShortReadSchema.model_validate(user)
 
 
 @auth_router.get('/exists', response_model=UserExistsResponse)
@@ -67,4 +67,4 @@ async def check_user_exists(
     username: Annotated[str, Query(description='The username to check', alias='u')],
 ) -> UserExistsResponse:
     exists = True if await service.check_exists(username) else False
-    return UserExistsResponse(exists=exists)
+    return UserExistsResponse(username=username, exists=exists)
