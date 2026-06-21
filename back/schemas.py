@@ -1,146 +1,127 @@
 from datetime import datetime
-from enum import Enum
-from typing import Generic, TypeVar
+from typing import TypeVar
 
-from fastapi import Response, UploadFile
-from pydantic import BaseModel, EmailStr, Field
+from fastapi import UploadFile
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 T = TypeVar('T')
 
 
-class LikesType(str, Enum):
-    users = 'users'
-    posts = 'posts'
-    comments = 'comments'
+# SocialLink
+class SocialLinkBaseSchema(BaseModel):
+    platform: str = Field(..., max_length=50)
+    url: str = Field(..., max_length=255)
 
 
-class TotalInfo(BaseModel):
-    total: int = 0
+class SocialLinkCreateSchema(SocialLinkBaseSchema):
+    pass
 
 
-class LikesInfo(TotalInfo):
-    type: LikesType = Field(default=LikesType.users)
-    objects: list['UserShortInfo | PostShortInfo | CommentInfo'] = []
-
-    model_config = {
-        'from_attributes': True,
-    }
-
-
-class UserShortInfo(BaseModel):
+class SocialLinkReadSchema(SocialLinkBaseSchema):
     id: int
-    username: str
 
-    model_config = {
-        'from_attributes': True,
-    }
+    model_config = ConfigDict(from_attributes=True)
 
 
-class UserInfo(UserShortInfo):
+# Stack
+class StackBaseSchema(BaseModel):
+    title: str = Field(..., max_length=50)
+
+
+class StackCreateSchema(StackBaseSchema):
+    pass
+
+
+class StackReadSchema(StackBaseSchema):
+    id: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# User
+class UserBaseSchema(BaseModel):
+    username: str = Field(..., min_length=3, max_length=50)
     email: EmailStr
-    bio: str | None
-    follows: LikesInfo = Field(default_factory=LikesInfo)
-    followers: LikesInfo = Field(default_factory=LikesInfo)
-    posts: list['PostShortInfo'] = []
-    comments: list['CommentInfo'] = []
-    social_links: list['SocialLinkInfo'] = []
-    stacks: list['StackInfo'] = []
+    bio: str | None = Field(..., max_length=255)
 
 
-class PostCreateInfo(BaseModel):
-    title: str = Field(..., min_length=1, max_length=100)
-    content: str
-    image: UploadFile | None = None
+class UserRegisterSchema(UserBaseSchema):
+    password: str = Field(..., min_length=3)
+    avatar: UploadFile | None
+    banner: UploadFile | None
 
 
-class PostShortInfo(BaseModel):
+class UserLoginSchema(BaseModel):
+    username: str = Field(..., min_length=3, max_length=50)
+    password: str = Field(..., min_length=3)
+
+
+class UserReadSchema(UserBaseSchema):
     id: int
-    author: UserShortInfo | None
-    created_at: datetime
-    title: str
-    views: int
-    is_liked: bool = False
-    hasImage: bool = False
-    likes: LikesInfo = Field(default_factory=LikesInfo)
+    social_links: list[SocialLinkReadSchema] = []
+    stacks: list[StackReadSchema] = []
 
-    model_config = {
-        'from_attributes': True,
-    }
+    model_config = ConfigDict(from_attributes=True)
 
 
-class PostInfo(PostShortInfo):
-    content: str
-    comments: list['CommentInfo'] = []
-
-
-class CommentCreateInfo(BaseModel):
-    content: str
-    post_id: int
-
-    model_config = {
-        'from_attributes': True,
-    }
-
-
-class CommentShortInfo(CommentCreateInfo):
+class UserShortReadSchema(UserBaseSchema):
     id: int
-    author: UserShortInfo
-    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 
-class CommentInfo(CommentShortInfo):
-    post: PostShortInfo
-
-
-class SocialLinkInfo(BaseModel):
-    id: int
-    user_id: int
-    platform: str
-    url: str
-
-    model_config = {
-        'from_attributes': True,
-    }
-
-
-class StackInfo(BaseModel):
-    id: int
-    user_id: int
-    title: str
-    icon: bytes | None = None
-    url: str
-
-    model_config = {
-        'from_attributes': True,
-    }
-
-
-# Requests
-class UserLoginData(BaseModel):
-    username: str
-    password: str
-
-
-class UserRegisterData(UserLoginData):
-    email: EmailStr
+class UserUpdate(BaseModel):
+    username: str | None = None
+    email: EmailStr | None = None
+    bio: str | None = None
     avatar: UploadFile | None = None
     banner: UploadFile | None = None
 
 
-# Responses
-class BaseResponse(BaseModel, Generic[T]):
-    data: T | None = None
-
-
 class UserExistsResponse(BaseModel):
+    username: str
     exists: bool
 
 
-class FileResponse(Response):
-    def __init__(self, file: bytes, filename: str = 'img.png', cache_seconds: int = 3600):
-        headers = {
-            'Content-Disposition': f'attachment; filename="{filename}"',
-            'Cache-Control': f'public, max-age={cache_seconds}',
-        }
+# Post
+class PostBaseSchema(BaseModel):
+    title: str = Field(..., max_length=255)
+    content: str = Field(...)
 
-        super().__init__(content=file, media_type='image/png', headers=headers)
+
+class PostCreateSchema(PostBaseSchema):
+    image: UploadFile | None
+
+
+class PostReadSchema(PostBaseSchema):
+    id: int
+    author_id: int
+    is_liked: bool = False
+    image: bytes | None
+    created_at: datetime
+    views: int = 0
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PostWithCommentsReadSchema(PostReadSchema):
+    comments: list[CommentReadSchema] = []
+
+
+# Comments
+class CommentBaseSchema(BaseModel):
+    content: str = Field(...)
+
+
+class CommentCreateSchema(CommentBaseSchema):
+    post_id: int
+
+
+class CommentReadSchema(CommentBaseSchema):
+    id: int
+    author_id: int
+    post_id: int
+    likes_count: int = 0
+    is_liked: bool = False
+
+    model_config = ConfigDict(from_attributes=True)
