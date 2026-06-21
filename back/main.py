@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from db import db_init
-from routes import v1_router
+from routes.v1 import v1_router
 
 
 @asynccontextmanager

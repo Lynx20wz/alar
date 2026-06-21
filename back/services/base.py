@@ -23,7 +23,7 @@ class BaseService(ABC, Generic[RepositoryType, ModelType]):
             raise NotFoundError()
         return obj
 
-    async def add(self, obj: ModelType) -> ModelType:
+    async def add(self, obj) -> ModelType:
         return await self.repository.add(obj)
 
     async def get(self, obj_id: int) -> ModelType | None:

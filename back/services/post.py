@@ -1,5 +1,6 @@
 from exceptions import PostNotFound
-from models import LikePostModel, PostModel
+from models import PostModel
+from models.LikeModels import LikePostModel
 from repositories import PostRepository
 
 from .base import BaseService
@@ -9,18 +10,10 @@ class PostService(BaseService[PostRepository, PostModel]):
     repo = PostRepository
 
     async def get_post(self, post_id: int, user_id: int | None = None) -> PostModel | None:
-        post = await self.repository.get(post_id)
+        return await self.repository.get(post_id, user_id)
 
-        if not post:
-            return None
-
-        if user_id:
-            post.is_liked = await self.is_liked_by(post, user_id)
-
-        return post
-
-    async def get_posts(self, offset: int = 0) -> list[PostModel]:
-        return await self.repository.get_all(offset)
+    async def get_posts(self, offset: int = 0, user_id: int | None = None) -> list[PostModel]:
+        return await self.repository.get_all(offset, user_id)
 
     async def change_like_status(self, post_id: int, user_id: int) -> bool:
         """Adds or removes a like from this user, depending on the current status.
@@ -46,6 +39,3 @@ class PostService(BaseService[PostRepository, PostModel]):
 
         post.is_liked = not post.is_liked
         return post.is_liked
-
-    async def is_liked_by(self, post: PostModel, user_id: int) -> bool:
-        return any(relation.user_id == user_id for relation in post.likes_relations)

@@ -1,7 +1,11 @@
+from typing import override
+
+from passlib.hash import sha256_crypt
+
 from exceptions import NotCorrectPassword, UserAlreadyExists, UserNotFound
 from models import UserModel
 from repositories import UserRepository
-from schemas import LikesInfo, LikesType, UserRegisterData
+from schemas import UserRegisterSchema
 
 from .base import BaseService
 
@@ -9,22 +13,50 @@ from .base import BaseService
 class UserService(BaseService[UserRepository, UserModel]):
     repo = UserRepository
 
+    @override
+    async def add(self, obj: UserRegisterSchema) -> UserModel:
+        user = await self.get_user_by_username(obj.username)
+
+        if user:
+            raise UserAlreadyExists(object_id=user.id)
+
+        password_hash = await self.generate_password_hash(obj.password)
+
+        user_model = UserModel(
+            username=obj.username,
+            email=obj.email,
+            password_hash=password_hash,
+            banner=await obj.banner.read() if obj.banner else None,
+            avatar=await obj.avatar.read() if obj.avatar else None,
+        )
+
+        return await self.repository.add(user_model)
+
     async def get_user_by_id(self, user_id: int) -> UserModel | None:
         return await self.repository.get(user_id)
 
     async def get_user_by_username(self, username: str) -> UserModel | None:
-        return await self.repository.get_by(username=username)
+        return await self.repository.get_by_username(username)
 
     async def login(self, username: str, password: str) -> UserModel:
         user = await self.get_user_by_username(username)
 
         if user is None:
-            raise UserNotFound()
+            raise UserNotFound(username=username)
 
-        if not user.check_password(password):
+        if not await self.check_password(user, password):
             raise NotCorrectPassword()
 
         return user
+
+    async def generate_password_hash(self, password: str) -> str:
+        return sha256_crypt.hash(password)
+
+    async def check_password(self, user: UserModel, password: str) -> bool:
+        if sha256_crypt.verify(password, user.password_hash):
+            return True
+
+        return False
 
     async def get_follows(self, user_id: int) -> LikesInfo:
         user = await self.get_user_by_id(user_id)
@@ -63,29 +95,4 @@ class UserService(BaseService[UserRepository, UserModel]):
         )
 
     async def check_exists(self, username: str) -> bool:
-        """Checks if user exists.
-
-        The self.get_user_by_username returns UserModel or raise UserNotFound
-        so if it raise the exception, user don't exists.
-
-        Also, user counts as exists if the given username is the same as the username of the user reduced to lowercase
-
-        Returns:
-            bool: True if user exists
-        """
         return await self.get_user_by_username(username) is not None
-
-    async def add_user(self, data: UserRegisterData) -> UserModel:
-        user = await self.get_user_by_username(data.username)
-
-        if user:
-            raise UserAlreadyExists(object_id=user.id)
-
-        user_model = UserModel(
-            username=data.username,
-            email=data.email,
-            password=data.password,
-            banner=await data.banner.read() if data.banner else None,
-            avatar=await data.avatar.read() if data.avatar else None,
-        )
-        return await self.repository.add(user_model)
