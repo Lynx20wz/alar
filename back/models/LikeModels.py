@@ -23,7 +23,7 @@ class LikeUserModel(LikeModel):
         back_populates='like_users_relations',
     )
     like_user: Mapped['UserModel'] = relationship(
-        foreign_keys=like_user_id,
+        foreign_keys='LikeUserModel.like_user_id',
         back_populates='like_by_users_relations',
     )
 
@@ -38,6 +38,6 @@ class LikePostModel(LikeModel):
         back_populates='like_posts_relations',
     )
     post: Mapped['PostModel'] = relationship(
-        foreign_keys=post_id,
+        foreign_keys='LikePostModel.post_id',
         back_populates='likes_relations',
     )

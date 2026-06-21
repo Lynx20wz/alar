@@ -17,5 +17,5 @@ class CommentModel(Base):
     content: Mapped[str] = mapped_column()
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
-    author: Mapped['UserModel'] = relationship(back_populates='comments', lazy='selectin')
-    post: Mapped['PostModel'] = relationship(back_populates='comments', lazy='selectin')
+    author: Mapped['UserModel'] = relationship(back_populates='comments')
+    post: Mapped['PostModel'] = relationship(back_populates='comments')
